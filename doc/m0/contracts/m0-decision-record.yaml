@@ -1,0 +1,48 @@
+version: 0.1.0
+status: READY_FOR_M1_WITH_OPEN_DOMAIN_ITEMS
+asset:
+  asset_code: G120-1
+  asset_type: DRIVE_SYSTEM
+  inverter_family: Siemens SINAMICS G120
+  inverter_variant: null
+  control_unit: null
+  power_module: null
+  firmware_version: null
+  motor_model: null
+source:
+  table: real_data
+  mode: READ_ONLY
+  data_kind: SIMULATED_HISTORICAL
+  nominal_sampling_interval_seconds: 3
+  realtime_supported: false
+  source_timezone: null
+roles:
+  GUEST:
+    asset_scope: ALLOWLIST
+    max_time_range_seconds: 3600
+    raw_data: false
+    fault_code_lookup: true
+    diagnosis: false
+    report: false
+  ENGINEER:
+    asset_scope: ASSIGNED
+    raw_data: true
+    diagnosis: true
+    report: true
+    confirm_fault: true
+  ADMIN:
+    asset_scope: ALL_LOCAL
+    raw_data: true
+    diagnosis: true
+    report: true
+    confirm_fault: true
+    knowledge_manage: true
+diagnosis_policy:
+  device_reported_faults: true
+  device_reported_alarms: true
+  data_quality_rules: true
+  absolute_industrial_thresholds: DISABLED_UNTIL_CONFIRMED
+  baseline_detection: PENDING_HEALTHY_BASELINE
+  llm_can_confirm_root_cause: false
+  confirmed_fault_actor: ENGINEER
+  report_label: AI_ASSISTED_OPERATION_DIAGNOSIS_SUMMARY

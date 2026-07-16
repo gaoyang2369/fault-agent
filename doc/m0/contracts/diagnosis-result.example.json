@@ -1,0 +1,54 @@
+{
+  "diagnosis_id": "diag-example",
+  "status": "HYPOTHESES_AVAILABLE",
+  "asset": {
+    "asset_code": "G120-1",
+    "asset_type": "DRIVE_SYSTEM"
+  },
+  "time_range": {
+    "start": "2026-07-16T00:00:00Z",
+    "end": "2026-07-16T01:00:00Z"
+  },
+  "data_quality": {
+    "status": "ACCEPTABLE",
+    "completeness": 0.98,
+    "warnings": []
+  },
+  "reported_events": [
+    {
+      "event_type": "FAULT",
+      "event_code": "EXAMPLE_ONLY",
+      "source": "DEVICE_REPORTED",
+      "evidence_ids": [
+        "ev-fault-code"
+      ]
+    }
+  ],
+  "anomalies": [],
+  "hypotheses": [
+    {
+      "hypothesis_id": "hyp-example",
+      "hypothesis_code": "UNDETERMINED_DRIVE_FAULT_CAUSE",
+      "target_component": "UNKNOWN",
+      "score": null,
+      "supporting_evidence_ids": [
+        "ev-fault-code",
+        "ev-manual"
+      ],
+      "contradicting_evidence_ids": [],
+      "unverified_conditions": [
+        "需要确认G120具体型号和固件",
+        "需要现场工程师确认根因"
+      ]
+    }
+  ],
+  "confirmed_fault": null,
+  "report": {
+    "report_id": "report-example",
+    "label": "AI_ASSISTED_OPERATION_DIAGNOSIS_SUMMARY"
+  },
+  "versions": {
+    "rule_profile": "G120_DRIVE_BASIC:0.1.0",
+    "knowledge_snapshot": "fixture"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "error": {
+    "code": "INSUFFICIENT_DATA",
+    "message": "目标时间范围内数据完整率不足，无法执行趋势诊断。",
+    "details": {
+      "completeness": 0.63,
+      "required": 0.8
+    },
+    "retryable": false,
+    "trace_id": "trace-example"
+  }
+}

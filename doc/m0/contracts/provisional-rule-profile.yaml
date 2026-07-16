@@ -1,0 +1,54 @@
+profile_id: G120_DRIVE_BASIC
+version: 0.1.0
+asset_code: G120-1
+rules:
+- rule_id: data_completeness_gate
+  type: DATA_QUALITY
+  enabled: true
+  parameters:
+    acceptable_min: 0.95
+    trend_analysis_min: 0.8
+    nominal_interval_seconds: 3
+    gap_warning_seconds: 9
+- rule_id: reported_fault_code
+  type: REPORTED_EVENT
+  enabled: false
+  enable_when: fault_code no-event encoding and format are confirmed
+- rule_id: reported_alarm_code
+  type: REPORTED_EVENT
+  enabled: false
+  enable_when: alarm_code no-event encoding and format are confirmed
+- rule_id: signal_stuck
+  type: DATA_QUALITY_ANOMALY
+  enabled: true
+  parameters:
+    duration_seconds: 300
+    requires_operating_state_change: true
+- rule_id: speed_tracking_deviation
+  type: BEHAVIOR_ANOMALY
+  enabled: false
+  parameters:
+    absolute_threshold: null
+    relative_threshold: null
+    duration_seconds: null
+- rule_id: motor_temperature_high
+  type: ABSOLUTE_THRESHOLD
+  enabled: false
+  parameters:
+    threshold: null
+    unit: null
+    duration_seconds: null
+- rule_id: inverter_temperature_high
+  type: ABSOLUTE_THRESHOLD
+  enabled: false
+  parameters:
+    threshold: null
+    unit: null
+    duration_seconds: null
+- rule_id: persistent_high_load
+  type: ABSOLUTE_THRESHOLD
+  enabled: false
+  parameters:
+    threshold: null
+    unit: null
+    duration_seconds: null

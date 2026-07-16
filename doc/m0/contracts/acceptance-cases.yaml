@@ -1,0 +1,46 @@
+version: 0.1.0
+cases:
+- id: NO_DATA
+  input:
+    asset_code: G120-1
+    fixture: empty
+  expected:
+    status: NO_DATA
+    hypothesis_count: 0
+    must_not_claim_normal: true
+- id: GUEST_TOO_LONG
+  input:
+    role: GUEST
+    range_seconds: 7200
+  expected:
+    error_code: GUEST_TIME_RANGE_EXCEEDED
+- id: INSUFFICIENT_DATA
+  input:
+    completeness: 0.63
+  expected:
+    status: INSUFFICIENT_DATA
+    duration_rules_executed: false
+- id: UNMAPPED_FAULT
+  input:
+    fault_code: UNKNOWN_CODE
+  expected:
+    reported_event: true
+    knowledge_status: UNMAPPED_FAULT_CODE
+    confirmed_fault: false
+- id: DISABLED_TEMPERATURE_RULE
+  input:
+    motor_temp: 999
+  expected:
+    temperature_anomaly: false
+    reason: RULE_DISABLED_OR_UNIT_UNKNOWN
+- id: COMPOSITE_REQUEST_PARTIAL
+  input:
+    tasks:
+    - telemetry
+    - knowledge
+    - diagnosis
+    - report
+    knowledge_fails: true
+  expected:
+    run_status: PARTIALLY_COMPLETED
+    telemetry_returned: true
