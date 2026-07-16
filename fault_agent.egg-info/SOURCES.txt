@@ -24,3 +24,5 @@ modules/iam/__init__.py
 modules/knowledge/__init__.py
 modules/report/__init__.py
 modules/telemetry/__init__.py
+tools/__init__.py
+tools/profile_real_data.py

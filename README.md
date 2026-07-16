@@ -20,3 +20,15 @@ uvicorn apps.api.main:app --reload
 
 健康检查：`GET /health`。
 
+## real_data 只读摸底
+
+通过进程环境变量提供连接信息；不要提交真实 `.env`：
+
+```powershell
+$env:REAL_DATA_DSN = "mysql+pymysql://user:password@host:3306/database"
+$env:REAL_DATA_TABLE = "real_data"
+$env:REAL_DATA_QUERY_TIMEOUT_SECONDS = "15"
+python -m tools.profile_real_data
+```
+
+默认最多读取 10,000 条样本，并输出 `real_data_profile.json` 和 `real_data_profile.md`。全表查询仅用于记录数、设备/变频器分布、字符串字段 Top 值及受限数量的重复候选；所有数据库语句均为内部定义的 `SELECT`，CLI 不接受原始 SQL 或任意表名。
