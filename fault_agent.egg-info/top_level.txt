@@ -1,4 +1,0 @@
-apps
-contracts
-modules
-tools

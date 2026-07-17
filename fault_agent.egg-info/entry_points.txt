@@ -1,3 +1,0 @@
-[console_scripts]
-fault-agent-api = apps.api.main:run
-fault-agent-worker = apps.agent_worker.main:main
