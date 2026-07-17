@@ -51,18 +51,19 @@ feedback_power
 
 ### 4. 状态字段编码
 
-- fault_code 无故障时是什么？
-- alarm_code 无报警时是什么？
+- 样本中 `fault_code` 仅有 `0`（490 条）和 `F1030-0/0/0`（76 条）；需确认 `0` 是否正式表示无故障；
+- 样本中 `alarm_code` 566 条均为 `0`；需确认 `0` 是否正式表示无报警；
 - 是否可能一次存在多个码？
-- status 有哪些枚举？
-- control_word 是十进制、十六进制、二进制还是文本？
+- 样本中 `status` 有 `0`、`45`、`42`、`31`；各值语义仍待确认；
+- `control_word` 样本值为 `5247`、`5246`、`5120`、`5182`；需确认编码进制和位定义；
 - status_word 对应哪一种报文位定义？
 
 ### 5. 时间语义
 
-- `timestamp` 格式；
-- 数据源时区；
-- `date + time` 与 `timestamp` 的关系；
+- `timestamp` 已确认为样本中的 13 位 Unix 毫秒时间戳，566/566 可解析为 UTC 时间点；
+- `date` 已观测为 `YYYY/MM/DD`，`time` 已观测为 `HH:mm:ss SSSms`；
+- `date + time` 的源时区仍待确认；
+- `date + time`、`timestamp` 与 `create_time` 的正式语义关系仍待确认；
 - `create_time` 是否为入库时间；
 - 是否存在跨日、夏令时或设备时钟漂移。
 

@@ -2,7 +2,7 @@
 
 ## 1. 数据源定位
 
-`real_data` 是 M0/M1 的模拟历史运行数据源。应用只读访问，不直接修改源记录。
+`dcma.real_data` 是 M0/M1 的模拟历史运行数据源。应用只读访问，不直接修改源记录。2026-07-16 的只读摸底覆盖该表全部 566 条记录，完整结果见 `12_data_profile_findings.md` 和仓库根目录的 `real_data_profile.json` / `real_data_profile.md`。
 
 ## 2. 原始字段分类
 
@@ -11,20 +11,20 @@
 | 字段 | 类型 | M0 用途 | 风险 |
 |---|---|---|---|
 | id | bigint | 源记录 ID | 不能作为业务资产 ID |
-| timestamp | varchar | 首选采集时间候选 | 格式、时区待确认 |
-| date | varchar | 采集日期候选 | 与 timestamp 重复 |
-| time | varchar | 采集时间候选 | 与 timestamp 重复 |
+| timestamp | varchar | 首选采集时间 | 已观测为 13 位 Unix 毫秒时间戳；566/566 可解析 |
+| date | varchar | 采集日期回退候选 | 已观测格式 `YYYY/MM/DD` |
+| time | varchar | 采集时间回退候选 | 已观测格式 `HH:mm:ss SSSms`；本地时区仍待确认 |
 | create_time | datetime | 数据入库时间 | 不一定是采集时间 |
-| device_name | varchar | 电机/设备名称候选 | 命名规则待确认 |
-| inverter_name | varchar | 变频器名称候选 | 与资产别名映射待确认 |
+| device_name | varchar | 电机/设备名称候选 | 样本唯一值 `G120电机1`；与 `G120-1` 映射待确认 |
+| inverter_name | varchar | 变频器名称候选 | 样本唯一值 `G120电机1`；与资产/部件映射待确认 |
 
 ### 状态和事件
 
 | 字段 | M0 用途 | 启用条件 |
 |---|---|---|
-| status | 状态变化和运行阶段 | 枚举值摸底后 |
-| fault_code | 设备上报故障事件 | 明确无故障值、格式和产品版本后 |
-| alarm_code | 设备上报报警事件 | 明确无报警值、格式和产品版本后 |
+| status | 状态变化和运行阶段 | 已观测 `0`、`45`、`42`、`31`；语义确认后 |
+| fault_code | 设备上报故障事件 | 已观测 `0`、`F1030-0/0/0`；无事件值和产品/固件语义确认后 |
+| alarm_code | 设备上报报警事件 | 已观测全为 `0`；无事件值确认后 |
 | control_word | 控制状态参考 | 明确编码/位定义后 |
 | status_word | 状态位解析 | 明确报文类型和位定义后 |
 | system_run_time | 累计运行时间 | 明确格式和单位后 |
@@ -68,11 +68,11 @@ ingested_at: TIMESTAMP WITH TIME ZONE
 
 优先级：
 
-1. 尝试解析 `timestamp`；
-2. 失败时解析 `date + time`；
+1. 将 13 位 `timestamp` 按 Unix 毫秒时间戳解析为 UTC 时间点；
+2. 失败时按已观测格式解析 `date + time`；该回退路径必须使用配置的 `SOURCE_TIMEZONE`；
 3. 两者都存在且相差超过允许误差时，标记 `TIMESTAMP_CONFLICT`；
 4. `create_time` 只作为入库时间；
-5. 源时区通过配置 `SOURCE_TIMEZONE` 提供，不能由 LLM 决定。
+5. Unix 时间戳本身表示 UTC 时间点；`date + time` 和无时区的 `create_time` 仍须通过配置 `SOURCE_TIMEZONE` 解释，不能由 LLM 决定。
 
 ## 4. 数据去重
 
@@ -123,7 +123,7 @@ gap_warning_seconds: 9
 - status 枚举；
 - control_word/status_word 的进制和长度。
 
-在摸底前，不允许将 `"0"` 以外的任意字符串自动判为故障。
+当前样本中 `fault_code="0"` 出现 490 次，`fault_code="F1030-0/0/0"` 出现 76 次，`alarm_code="0"` 出现 566 次。`"0"` 只是候选无事件值，在设备配置或数据生成规范确认前不得直接固化为领域规则；`F1030-0/0/0` 只能先作为原始上报码保留，不得在缺少适用手册时扩写含义。
 
 ## 7. 宽表适配输出
 
@@ -165,3 +165,5 @@ Codex/后端需要生成：
 - 时间解析失败率；
 - 故障码和报警码分布；
 - 温度、负载、速度和功率字段的明显异常范围。
+
+该输出已由 `python -m tools.profile_real_data` 实现并于 2026-07-16 对 `dcma.real_data` 执行。当前快照结论见 `12_data_profile_findings.md`。

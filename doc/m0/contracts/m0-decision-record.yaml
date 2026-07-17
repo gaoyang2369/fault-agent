@@ -1,4 +1,4 @@
-version: 0.1.0
+version: 0.2.0
 status: READY_FOR_M1_WITH_OPEN_DOMAIN_ITEMS
 asset:
   asset_code: G120-1
@@ -10,12 +10,41 @@ asset:
   firmware_version: null
   motor_model: null
 source:
+  database: dcma
   table: real_data
   mode: READ_ONLY
   data_kind: SIMULATED_HISTORICAL
   nominal_sampling_interval_seconds: 3
   realtime_supported: false
   source_timezone: null
+  timestamp_encoding: UNIX_EPOCH_MILLISECONDS_13_DIGITS
+  timestamp_parse_success: 566/566
+  fallback_date_format: YYYY/MM/DD
+  fallback_time_format: HH:mm:ss_SSSms
+  observed_device_name: G120电机1
+  observed_inverter_name: G120电机1
+  asset_mapping_status: UNCONFIRMED
+profile_snapshot:
+  generated_at: "2026-07-16T15:12:44.439200Z"
+  row_count: 566
+  sample_truncated: false
+  min_create_time: "2026-01-14T14:12:41"
+  max_create_time: "2026-01-14T18:27:24"
+  sampling_interval_seconds:
+    min: 3.017
+    p50: 3.196
+    p95: 6.3936
+    max: 13005.709
+  duplicate_candidate_groups: 0
+  units_confirmed: false
+  industrial_thresholds_derived: false
+  raw_event_values:
+    fault_code:
+      "0": 490
+      F1030-0/0/0: 76
+    alarm_code:
+      "0": 566
+  event_semantics_status: UNCONFIRMED
 roles:
   GUEST:
     asset_scope: ALLOWLIST

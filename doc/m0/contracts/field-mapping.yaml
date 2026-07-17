@@ -1,4 +1,7 @@
+version: 0.2.0
+source_database: dcma
 source_table: real_data
+profile_snapshot: "2026-07-16T15:12:44.439200Z"
 fields:
 - source: id
   canonical: source_record_id
@@ -9,42 +12,59 @@ fields:
   canonical: observed_at_candidate
   category: time
   unit: null
-  status: profiling_required
+  status: enabled
+  encoding: unix_epoch_milliseconds_13_digits
 - source: device_name
   canonical: device_name
   category: identity
   unit: null
-  status: profiling_required
+  status: asset_mapping_required
+  observed_values:
+  - G120电机1
 - source: inverter_name
   canonical: inverter_name
   category: identity
   unit: null
-  status: profiling_required
+  status: asset_mapping_required
+  observed_values:
+  - G120电机1
 - source: date
   canonical: observed_date_candidate
   category: time
   unit: null
-  status: fallback
+  status: fallback_timezone_required
+  observed_format: YYYY/MM/DD
 - source: time
   canonical: observed_time_candidate
   category: time
   unit: null
-  status: fallback
+  status: fallback_timezone_required
+  observed_format: HH:mm:ss_SSSms
 - source: status
   canonical: reported_status
   category: event
   unit: null
-  status: profiling_required
+  status: semantic_mapping_required
+  observed_values:
+  - "0"
+  - "45"
+  - "42"
+  - "31"
 - source: fault_code
   canonical: reported_fault_code
   category: event
   unit: null
-  status: profiling_required
+  status: no_event_and_product_semantics_confirmation_required
+  observed_values:
+    "0": 490
+    F1030-0/0/0: 76
 - source: alarm_code
   canonical: reported_alarm_code
   category: event
   unit: null
-  status: profiling_required
+  status: no_event_semantics_confirmation_required
+  observed_values:
+    "0": 566
 - source: control_word
   canonical: control_word_raw
   category: raw_status
@@ -154,4 +174,5 @@ fields:
   canonical: ingested_at
   category: time
   unit: null
-  status: enabled
+  status: timezone_and_semantics_required
+  observed_format: MYSQL_DATETIME_WITHOUT_TIMEZONE

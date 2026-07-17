@@ -1,6 +1,7 @@
 profile_id: G120_DRIVE_BASIC
-version: 0.1.0
+version: 0.2.0
 asset_code: G120-1
+profile_snapshot: "2026-07-16T15:12:44.439200Z"
 rules:
 - rule_id: data_completeness_gate
   type: DATA_QUALITY
@@ -13,10 +14,15 @@ rules:
 - rule_id: reported_fault_code
   type: REPORTED_EVENT
   enabled: false
-  enable_when: fault_code no-event encoding and format are confirmed
+  observed_values:
+    "0": 490
+    F1030-0/0/0: 76
+  enable_when: fault_code no-event encoding, product variant, firmware and manual semantics are confirmed
 - rule_id: reported_alarm_code
   type: REPORTED_EVENT
   enabled: false
+  observed_values:
+    "0": 566
   enable_when: alarm_code no-event encoding and format are confirmed
 - rule_id: signal_stuck
   type: DATA_QUALITY_ANOMALY

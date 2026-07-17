@@ -1,5 +1,19 @@
-version: 0.1.0
+version: 0.2.0
 cases:
+- id: EPOCH_MILLISECONDS_TIMESTAMP
+  input:
+    timestamp: "1768371161277"
+  expected:
+    observed_at: "2026-01-14T06:12:41.277000Z"
+    timezone_aware: true
+- id: CONFIGURED_NO_EVENT_ZERO
+  input:
+    fault_code: "0"
+    no_event_values:
+    - "0"
+  expected:
+    reported_event: false
+    configuration_required: true
 - id: NO_DATA
   input:
     asset_code: G120-1
