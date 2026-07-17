@@ -1,0 +1,80 @@
+{
+  "$defs": {
+    "HypothesisTarget": {
+      "enum": [
+        "INVERTER",
+        "MOTOR",
+        "DRIVE_SYSTEM",
+        "UNKNOWN"
+      ],
+      "title": "HypothesisTarget",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "hypothesis_id": {
+      "minLength": 1,
+      "title": "Hypothesis Id",
+      "type": "string"
+    },
+    "hypothesis_code": {
+      "minLength": 1,
+      "title": "Hypothesis Code",
+      "type": "string"
+    },
+    "target_component": {
+      "$ref": "#/$defs/HypothesisTarget"
+    },
+    "score": {
+      "anyOf": [
+        {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Score"
+    },
+    "supporting_evidence_ids": {
+      "default": [],
+      "items": {
+        "maxLength": 128,
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Supporting Evidence Ids",
+      "type": "array"
+    },
+    "contradicting_evidence_ids": {
+      "default": [],
+      "items": {
+        "maxLength": 128,
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Contradicting Evidence Ids",
+      "type": "array"
+    },
+    "unverified_conditions": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Unverified Conditions",
+      "type": "array"
+    }
+  },
+  "required": [
+    "hypothesis_id",
+    "hypothesis_code",
+    "target_component"
+  ],
+  "title": "Hypothesis",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

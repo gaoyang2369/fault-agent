@@ -1,0 +1,13 @@
+{
+  "diagnosis_id": "diag-multiple", "asset_id": "asset-g120-1",
+  "time_range": {"start": "2026-01-14T06:00:00Z", "end": "2026-01-14T07:00:00Z"},
+  "status": "HYPOTHESES_AVAILABLE",
+  "data_quality": {"status": "DEGRADED", "expected_points": 1200, "observed_points": 1100, "valid_timestamp_points": 1100, "completeness": 0.9167, "timestamp_parse_failure_count": 0, "duplicate_count": 0, "gap_count": 1, "maximum_gap_seconds": 12.0, "allowed_analyses": ["POINT_SUMMARY", "REPORTED_EVENT_DETECTION", "TREND_ANALYSIS"], "warnings": ["DATA_GAP"]},
+  "reported_events": [], "anomalies": [],
+  "hypotheses": [
+    {"hypothesis_id": "hyp-1", "hypothesis_code": "COOLING_CHECK_REQUIRED", "target_component": "INVERTER", "score": null, "supporting_evidence_ids": ["ev-1"], "contradicting_evidence_ids": ["ev-2"], "unverified_conditions": ["inspect cooling path"]},
+    {"hypothesis_id": "hyp-2", "hypothesis_code": "LOAD_CHECK_REQUIRED", "target_component": "DRIVE_SYSTEM", "score": null, "supporting_evidence_ids": ["ev-1"], "contradicting_evidence_ids": [], "unverified_conditions": ["verify load"]}
+  ],
+  "confirmed_fault": null, "evidence_ids": ["ev-1", "ev-2"],
+  "versions": {"rule_version": "fixture:0.1.0", "knowledge_version": "none", "model_version": "none"}
+}

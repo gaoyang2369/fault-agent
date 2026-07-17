@@ -1,0 +1,80 @@
+{
+  "$defs": {
+    "ComponentType": {
+      "enum": [
+        "INVERTER",
+        "MOTOR"
+      ],
+      "title": "ComponentType",
+      "type": "string"
+    },
+    "SignalDataType": {
+      "enum": [
+        "FLOAT",
+        "INTEGER",
+        "STRING",
+        "BOOLEAN"
+      ],
+      "title": "SignalDataType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "signal_code": {
+      "minLength": 1,
+      "title": "Signal Code",
+      "type": "string"
+    },
+    "display_name": {
+      "minLength": 1,
+      "title": "Display Name",
+      "type": "string"
+    },
+    "component_type": {
+      "$ref": "#/$defs/ComponentType"
+    },
+    "data_type": {
+      "$ref": "#/$defs/SignalDataType"
+    },
+    "unit": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Unit"
+    },
+    "nominal_sampling_interval_seconds": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Nominal Sampling Interval Seconds"
+    },
+    "diagnostic_enabled": {
+      "default": false,
+      "title": "Diagnostic Enabled",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "signal_code",
+    "display_name",
+    "component_type",
+    "data_type"
+  ],
+  "title": "SignalDefinition",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

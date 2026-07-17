@@ -1,0 +1,13 @@
+"""Asset application ports."""
+
+from typing import Protocol
+
+from modules.asset.domain.models import DriveSystem, SignalDefinition
+from shared.identifiers import AssetCode, AssetId
+
+
+class AssetRepository(Protocol):
+    def get_by_id(self, asset_id: AssetId) -> DriveSystem | None: ...
+    def get_by_code(self, asset_code: AssetCode) -> DriveSystem | None: ...
+    def get_source_locator(self, asset_id: AssetId) -> object | None: ...
+    def list_signal_definitions(self, asset_id: AssetId) -> tuple[SignalDefinition, ...]: ...

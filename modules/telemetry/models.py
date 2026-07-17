@@ -1,4 +1,4 @@
-"""Public telemetry query contracts."""
+"""Deprecated Task 3.1 source-oriented contracts kept for compatibility."""
 
 from __future__ import annotations
 
@@ -24,6 +24,8 @@ class AggregationSpec(StrictModel):
 
 
 class TelemetryQuery(StrictModel):
+    """Deprecated Task 3.1 source-oriented query; use TelemetryQueryCommand."""
+
     device_name: str | None = Field(default=None, min_length=1, max_length=255)
     inverter_name: str | None = Field(default=None, min_length=1, max_length=255)
     start: datetime
@@ -84,7 +86,7 @@ class DataQualitySettings(StrictModel):
 
 
 class RequestContext(StrictModel):
-    """Authenticated request metadata supplied by a trusted application boundary."""
+    """Deprecated compatibility context; use shared.context.RequestContext."""
 
     request_id: str = Field(min_length=1)
     trace_id: str = Field(min_length=1)

@@ -1,0 +1,49 @@
+"""Committed examples are executable JSON Schema contracts."""
+
+import json
+from pathlib import Path
+
+import pytest
+from jsonschema import Draft202012Validator  # type: ignore[import-untyped]
+
+ROOT = Path(__file__).parents[2]
+SCHEMA_DIR = ROOT / "contracts" / "jsonschema"
+EXAMPLE_DIR = ROOT / "contracts" / "examples"
+
+EXAMPLE_SCHEMAS = {
+    "telemetry-query.valid.json": "telemetry-query-command.schema.json",
+    "telemetry-result.acceptable.json": "telemetry-query-result.schema.json",
+    "telemetry-result.insufficient.json": "telemetry-query-result.schema.json",
+    "diagnosis-result.reported-fault.json": "diagnosis-result.schema.json",
+    "diagnosis-result.multiple-hypotheses.json": "diagnosis-result.schema.json",
+    "diagnosis-result.insufficient-evidence.json": "diagnosis-result.schema.json",
+    "confirmed-fault.valid.json": "confirmed-fault.schema.json",
+    "error-response.json": "error-response.schema.json",
+}
+
+
+@pytest.mark.parametrize(("example_name", "schema_name"), EXAMPLE_SCHEMAS.items())
+def test_valid_example_matches_schema(example_name: str, schema_name: str) -> None:
+    schema = json.loads((SCHEMA_DIR / schema_name).read_text(encoding="utf-8"))
+    example = json.loads((EXAMPLE_DIR / example_name).read_text(encoding="utf-8"))
+    Draft202012Validator(schema).validate(example)
+
+
+def test_invalid_example_fails_schema() -> None:
+    schema = json.loads(
+        (SCHEMA_DIR / "telemetry-query-command.schema.json").read_text(encoding="utf-8")
+    )
+    example = json.loads((EXAMPLE_DIR / "telemetry-query.invalid.json").read_text(encoding="utf-8"))
+    assert list(Draft202012Validator(schema).iter_errors(example))
+
+
+def test_public_schemas_do_not_expose_source_locator_or_query_identity() -> None:
+    schemas = "\n".join(
+        path.read_text(encoding="utf-8") for path in sorted(SCHEMA_DIR.glob("*.schema.json"))
+    )
+    assert "device_name" not in schemas
+    assert "inverter_name" not in schemas
+    command_schema = (SCHEMA_DIR / "telemetry-query-command.schema.json").read_text(
+        encoding="utf-8"
+    )
+    assert "user_id" not in command_schema

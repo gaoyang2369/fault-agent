@@ -1,0 +1,9 @@
+{
+  "asset_code": "G120-1",
+  "device_name": "G120电机1",
+  "time_range": {
+    "start": "2026-01-14T06:00:00Z",
+    "end": "2026-01-14T07:00:00Z"
+  },
+  "signal_codes": ["speed_actual"]
+}

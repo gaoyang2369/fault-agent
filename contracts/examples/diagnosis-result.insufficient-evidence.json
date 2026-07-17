@@ -1,0 +1,9 @@
+{
+  "diagnosis_id": "diag-insufficient", "asset_id": "asset-g120-1",
+  "time_range": {"start": "2026-01-14T06:00:00Z", "end": "2026-01-14T07:00:00Z"},
+  "status": "INSUFFICIENT_DATA",
+  "data_quality": {"status": "INSUFFICIENT", "expected_points": 1200, "observed_points": 100, "valid_timestamp_points": 100, "completeness": 0.0833, "timestamp_parse_failure_count": 0, "duplicate_count": 0, "gap_count": 3, "maximum_gap_seconds": 900.0, "allowed_analyses": ["POINT_SUMMARY", "REPORTED_EVENT_DETECTION"], "warnings": ["INSUFFICIENT_DATA"]},
+  "reported_events": [], "anomalies": [], "hypotheses": [], "confirmed_fault": null,
+  "evidence_ids": ["ev-quality"],
+  "versions": {"rule_version": "fixture:0.1.0", "knowledge_version": "none", "model_version": "none"}
+}

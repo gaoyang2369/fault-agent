@@ -1,0 +1,62 @@
+{
+  "$defs": {
+    "ConfirmationMethod": {
+      "enum": [
+        "INSPECTION",
+        "REPAIR_RESULT",
+        "MANUFACTURER_DIAGNOSTIC"
+      ],
+      "title": "ConfirmationMethod",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "confirmed_fault_id": {
+      "minLength": 1,
+      "title": "Confirmed Fault Id",
+      "type": "string"
+    },
+    "fault_code": {
+      "minLength": 1,
+      "title": "Fault Code",
+      "type": "string"
+    },
+    "confirmed_by": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Confirmed By",
+      "type": "string"
+    },
+    "confirmed_at": {
+      "format": "date-time",
+      "title": "Confirmed At",
+      "type": "string"
+    },
+    "confirmation_method": {
+      "$ref": "#/$defs/ConfirmationMethod"
+    },
+    "source_hypothesis_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source Hypothesis Id"
+    }
+  },
+  "required": [
+    "confirmed_fault_id",
+    "fault_code",
+    "confirmed_by",
+    "confirmed_at",
+    "confirmation_method"
+  ],
+  "title": "ConfirmedFault",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

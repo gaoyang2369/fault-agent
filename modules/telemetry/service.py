@@ -44,7 +44,7 @@ class AllowAllTelemetryPolicy:
 
 
 class TelemetryQueryService:
-    """Validate application policy, query the source, and shape bounded results."""
+    """Deprecated Task 3.1 adapter; new callers use application.service."""
 
     def __init__(
         self,

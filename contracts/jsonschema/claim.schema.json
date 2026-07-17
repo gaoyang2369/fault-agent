@@ -1,0 +1,89 @@
+{
+  "$defs": {
+    "ClaimGenerator": {
+      "enum": [
+        "SYSTEM",
+        "RULE_ENGINE",
+        "MODEL",
+        "HUMAN"
+      ],
+      "title": "ClaimGenerator",
+      "type": "string"
+    },
+    "ClaimType": {
+      "enum": [
+        "MATERIAL",
+        "INFORMATIONAL"
+      ],
+      "title": "ClaimType",
+      "type": "string"
+    },
+    "EvidenceStatus": {
+      "enum": [
+        "SUFFICIENT",
+        "INSUFFICIENT"
+      ],
+      "title": "EvidenceStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "claim_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Claim Id",
+      "type": "string"
+    },
+    "claim_type": {
+      "$ref": "#/$defs/ClaimType"
+    },
+    "statement_code": {
+      "minLength": 1,
+      "title": "Statement Code",
+      "type": "string"
+    },
+    "supporting_evidence_ids": {
+      "default": [],
+      "items": {
+        "maxLength": 128,
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Supporting Evidence Ids",
+      "type": "array"
+    },
+    "contradicting_evidence_ids": {
+      "default": [],
+      "items": {
+        "maxLength": 128,
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Contradicting Evidence Ids",
+      "type": "array"
+    },
+    "evidence_status": {
+      "$ref": "#/$defs/EvidenceStatus",
+      "default": "SUFFICIENT"
+    },
+    "generated_by": {
+      "$ref": "#/$defs/ClaimGenerator"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "claim_id",
+    "claim_type",
+    "statement_code",
+    "generated_by",
+    "created_at"
+  ],
+  "title": "Claim",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

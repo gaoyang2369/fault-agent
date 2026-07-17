@@ -1,0 +1,8 @@
+{
+  "confirmed_fault_id": "fault-confirmed-1",
+  "fault_code": "FIELD_CONFIRMED_FAULT",
+  "confirmed_by": "engineer-1",
+  "confirmed_at": "2026-01-14T08:00:00Z",
+  "confirmation_method": "INSPECTION",
+  "source_hypothesis_id": "hyp-1"
+}

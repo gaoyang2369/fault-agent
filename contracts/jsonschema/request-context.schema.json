@@ -1,0 +1,63 @@
+{
+  "$defs": {
+    "RequestSource": {
+      "enum": [
+        "HTTP",
+        "AGENT_TOOL",
+        "INTERNAL"
+      ],
+      "title": "RequestSource",
+      "type": "string"
+    },
+    "Role": {
+      "enum": [
+        "GUEST",
+        "ENGINEER",
+        "ADMIN"
+      ],
+      "title": "Role",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "request_id": {
+      "minLength": 1,
+      "title": "Request Id",
+      "type": "string"
+    },
+    "trace_id": {
+      "minLength": 1,
+      "title": "Trace Id",
+      "type": "string"
+    },
+    "user_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "User Id",
+      "type": "string"
+    },
+    "roles": {
+      "items": {
+        "$ref": "#/$defs/Role"
+      },
+      "minItems": 1,
+      "title": "Roles",
+      "type": "array",
+      "uniqueItems": true
+    },
+    "request_source": {
+      "$ref": "#/$defs/RequestSource"
+    }
+  },
+  "required": [
+    "request_id",
+    "trace_id",
+    "user_id",
+    "roles",
+    "request_source"
+  ],
+  "title": "RequestContext",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

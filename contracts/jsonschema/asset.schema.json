@@ -1,0 +1,134 @@
+{
+  "$defs": {
+    "AssetStatus": {
+      "enum": [
+        "ACTIVE",
+        "INACTIVE"
+      ],
+      "title": "AssetStatus",
+      "type": "string"
+    },
+    "AssetType": {
+      "enum": [
+        "DRIVE_SYSTEM"
+      ],
+      "title": "AssetType",
+      "type": "string"
+    },
+    "Component": {
+      "additionalProperties": false,
+      "properties": {
+        "component_id": {
+          "minLength": 1,
+          "title": "Component Id",
+          "type": "string"
+        },
+        "asset_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Asset Id",
+          "type": "string"
+        },
+        "component_type": {
+          "$ref": "#/$defs/ComponentType"
+        },
+        "manufacturer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Manufacturer"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model"
+        },
+        "firmware_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Firmware Version"
+        }
+      },
+      "required": [
+        "component_id",
+        "asset_id",
+        "component_type"
+      ],
+      "title": "Component",
+      "type": "object"
+    },
+    "ComponentType": {
+      "enum": [
+        "INVERTER",
+        "MOTOR"
+      ],
+      "title": "ComponentType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "asset_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Asset Id",
+      "type": "string"
+    },
+    "asset_code": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Asset Code",
+      "type": "string"
+    },
+    "display_name": {
+      "minLength": 1,
+      "title": "Display Name",
+      "type": "string"
+    },
+    "asset_type": {
+      "$ref": "#/$defs/AssetType",
+      "default": "DRIVE_SYSTEM"
+    },
+    "status": {
+      "$ref": "#/$defs/AssetStatus"
+    },
+    "components": {
+      "items": {
+        "$ref": "#/$defs/Component"
+      },
+      "minItems": 2,
+      "title": "Components",
+      "type": "array"
+    }
+  },
+  "required": [
+    "asset_id",
+    "asset_code",
+    "display_name",
+    "status",
+    "components"
+  ],
+  "title": "DriveSystem",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

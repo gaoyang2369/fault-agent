@@ -1,0 +1,401 @@
+{
+  "$defs": {
+    "DataQualityPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "DATA_QUALITY",
+          "title": "Kind",
+          "type": "string"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        },
+        "completeness": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Completeness",
+          "type": "number"
+        },
+        "warning_codes": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Warning Codes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "status",
+        "completeness"
+      ],
+      "title": "DataQualityPayload",
+      "type": "object"
+    },
+    "DocumentChunkPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "DOCUMENT_CHUNK",
+          "title": "Kind",
+          "type": "string"
+        },
+        "document_id": {
+          "minLength": 1,
+          "title": "Document Id",
+          "type": "string"
+        },
+        "document_version": {
+          "minLength": 1,
+          "title": "Document Version",
+          "type": "string"
+        },
+        "chunk_id": {
+          "minLength": 1,
+          "title": "Chunk Id",
+          "type": "string"
+        },
+        "text_excerpt": {
+          "minLength": 1,
+          "title": "Text Excerpt",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "document_id",
+        "document_version",
+        "chunk_id",
+        "text_excerpt"
+      ],
+      "title": "DocumentChunkPayload",
+      "type": "object"
+    },
+    "EvidenceType": {
+      "enum": [
+        "TELEMETRY_SLICE",
+        "DATA_QUALITY",
+        "REPORTED_FAULT_CODE",
+        "REPORTED_ALARM_CODE",
+        "RULE_HIT",
+        "DOCUMENT_CHUNK",
+        "MODEL_INFERENCE",
+        "USER_OBSERVATION"
+      ],
+      "title": "EvidenceType",
+      "type": "string"
+    },
+    "ModelInferencePayload": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "MODEL_INFERENCE",
+          "title": "Kind",
+          "type": "string"
+        },
+        "model_version": {
+          "minLength": 1,
+          "title": "Model Version",
+          "type": "string"
+        },
+        "output_code": {
+          "minLength": 1,
+          "title": "Output Code",
+          "type": "string"
+        },
+        "input_evidence_ids": {
+          "items": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Input Evidence Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "model_version",
+        "output_code",
+        "input_evidence_ids"
+      ],
+      "title": "ModelInferencePayload",
+      "type": "object"
+    },
+    "ReportedCodePayload": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "REPORTED_FAULT_CODE",
+            "REPORTED_ALARM_CODE"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "raw_code": {
+          "minLength": 1,
+          "title": "Raw Code",
+          "type": "string"
+        },
+        "normalized_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Normalized Code"
+        },
+        "source_record_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Record Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "raw_code",
+        "source_record_ids"
+      ],
+      "title": "ReportedCodePayload",
+      "type": "object"
+    },
+    "RuleHitPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "RULE_HIT",
+          "title": "Kind",
+          "type": "string"
+        },
+        "rule_id": {
+          "minLength": 1,
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "rule_version": {
+          "minLength": 1,
+          "title": "Rule Version",
+          "type": "string"
+        },
+        "observed_value_summary": {
+          "minLength": 1,
+          "title": "Observed Value Summary",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "rule_id",
+        "rule_version",
+        "observed_value_summary"
+      ],
+      "title": "RuleHitPayload",
+      "type": "object"
+    },
+    "TelemetrySlicePayload": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "TELEMETRY_SLICE",
+          "title": "Kind",
+          "type": "string"
+        },
+        "signal_codes": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Signal Codes",
+          "type": "array"
+        },
+        "point_count": {
+          "minimum": 0,
+          "title": "Point Count",
+          "type": "integer"
+        },
+        "source_record_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Record Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "signal_codes",
+        "point_count",
+        "source_record_ids"
+      ],
+      "title": "TelemetrySlicePayload",
+      "type": "object"
+    },
+    "TimeRange": {
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        },
+        "end": {
+          "format": "date-time",
+          "title": "End",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "title": "TimeRange",
+      "type": "object"
+    },
+    "UserObservationPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "USER_OBSERVATION",
+          "title": "Kind",
+          "type": "string"
+        },
+        "observation_code": {
+          "minLength": 1,
+          "title": "Observation Code",
+          "type": "string"
+        },
+        "statement": {
+          "minLength": 1,
+          "title": "Statement",
+          "type": "string"
+        },
+        "recorded_by": {
+          "minLength": 1,
+          "title": "Recorded By",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "observation_code",
+        "statement",
+        "recorded_by"
+      ],
+      "title": "UserObservationPayload",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "evidence_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Evidence Id",
+      "type": "string"
+    },
+    "evidence_type": {
+      "$ref": "#/$defs/EvidenceType"
+    },
+    "asset_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Asset Id",
+      "type": "string"
+    },
+    "time_range": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TimeRange"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "source": {
+      "minLength": 1,
+      "title": "Source",
+      "type": "string"
+    },
+    "source_reference": {
+      "minLength": 1,
+      "title": "Source Reference",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "content_hash": {
+      "pattern": "^[a-fA-F0-9]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "payload": {
+      "discriminator": {
+        "mapping": {
+          "DATA_QUALITY": "#/$defs/DataQualityPayload",
+          "DOCUMENT_CHUNK": "#/$defs/DocumentChunkPayload",
+          "MODEL_INFERENCE": "#/$defs/ModelInferencePayload",
+          "REPORTED_ALARM_CODE": "#/$defs/ReportedCodePayload",
+          "REPORTED_FAULT_CODE": "#/$defs/ReportedCodePayload",
+          "RULE_HIT": "#/$defs/RuleHitPayload",
+          "TELEMETRY_SLICE": "#/$defs/TelemetrySlicePayload",
+          "USER_OBSERVATION": "#/$defs/UserObservationPayload"
+        },
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/TelemetrySlicePayload"
+        },
+        {
+          "$ref": "#/$defs/DataQualityPayload"
+        },
+        {
+          "$ref": "#/$defs/ReportedCodePayload"
+        },
+        {
+          "$ref": "#/$defs/RuleHitPayload"
+        },
+        {
+          "$ref": "#/$defs/DocumentChunkPayload"
+        },
+        {
+          "$ref": "#/$defs/ModelInferencePayload"
+        },
+        {
+          "$ref": "#/$defs/UserObservationPayload"
+        }
+      ],
+      "title": "Payload"
+    }
+  },
+  "required": [
+    "evidence_id",
+    "evidence_type",
+    "asset_id",
+    "source",
+    "source_reference",
+    "created_at",
+    "content_hash",
+    "payload"
+  ],
+  "title": "Evidence",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

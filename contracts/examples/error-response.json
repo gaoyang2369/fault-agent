@@ -1,0 +1,9 @@
+{
+  "error": {
+    "code": "INSUFFICIENT_DATA",
+    "message": "The requested data cannot support trend analysis.",
+    "details": {"completeness": 0.63, "required": 0.8},
+    "retryable": false,
+    "trace_id": "trace-example"
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "$defs": {
+    "AnomalySeverity": {
+      "enum": [
+        "INFO",
+        "LOW",
+        "MEDIUM",
+        "HIGH",
+        "CRITICAL"
+      ],
+      "title": "AnomalySeverity",
+      "type": "string"
+    },
+    "TimeRange": {
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        },
+        "end": {
+          "format": "date-time",
+          "title": "End",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "title": "TimeRange",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "anomaly_id": {
+      "minLength": 1,
+      "title": "Anomaly Id",
+      "type": "string"
+    },
+    "anomaly_type": {
+      "minLength": 1,
+      "title": "Anomaly Type",
+      "type": "string"
+    },
+    "severity": {
+      "$ref": "#/$defs/AnomalySeverity"
+    },
+    "time_range": {
+      "$ref": "#/$defs/TimeRange"
+    },
+    "rule_id": {
+      "minLength": 1,
+      "title": "Rule Id",
+      "type": "string"
+    },
+    "evidence_ids": {
+      "items": {
+        "maxLength": 128,
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Evidence Ids",
+      "type": "array"
+    }
+  },
+  "required": [
+    "anomaly_id",
+    "anomaly_type",
+    "severity",
+    "time_range",
+    "rule_id",
+    "evidence_ids"
+  ],
+  "title": "Anomaly",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

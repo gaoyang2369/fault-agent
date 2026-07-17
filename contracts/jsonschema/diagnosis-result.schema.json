@@ -1,0 +1,503 @@
+{
+  "$defs": {
+    "AllowedAnalysis": {
+      "enum": [
+        "POINT_SUMMARY",
+        "REPORTED_EVENT_DETECTION",
+        "TREND_ANALYSIS",
+        "DURATION_RULES"
+      ],
+      "title": "AllowedAnalysis",
+      "type": "string"
+    },
+    "Anomaly": {
+      "additionalProperties": false,
+      "properties": {
+        "anomaly_id": {
+          "minLength": 1,
+          "title": "Anomaly Id",
+          "type": "string"
+        },
+        "anomaly_type": {
+          "minLength": 1,
+          "title": "Anomaly Type",
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/AnomalySeverity"
+        },
+        "time_range": {
+          "$ref": "#/$defs/TimeRange"
+        },
+        "rule_id": {
+          "minLength": 1,
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "anomaly_id",
+        "anomaly_type",
+        "severity",
+        "time_range",
+        "rule_id",
+        "evidence_ids"
+      ],
+      "title": "Anomaly",
+      "type": "object"
+    },
+    "AnomalySeverity": {
+      "enum": [
+        "INFO",
+        "LOW",
+        "MEDIUM",
+        "HIGH",
+        "CRITICAL"
+      ],
+      "title": "AnomalySeverity",
+      "type": "string"
+    },
+    "ConfirmationMethod": {
+      "enum": [
+        "INSPECTION",
+        "REPAIR_RESULT",
+        "MANUFACTURER_DIAGNOSTIC"
+      ],
+      "title": "ConfirmationMethod",
+      "type": "string"
+    },
+    "ConfirmedFault": {
+      "additionalProperties": false,
+      "properties": {
+        "confirmed_fault_id": {
+          "minLength": 1,
+          "title": "Confirmed Fault Id",
+          "type": "string"
+        },
+        "fault_code": {
+          "minLength": 1,
+          "title": "Fault Code",
+          "type": "string"
+        },
+        "confirmed_by": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Confirmed By",
+          "type": "string"
+        },
+        "confirmed_at": {
+          "format": "date-time",
+          "title": "Confirmed At",
+          "type": "string"
+        },
+        "confirmation_method": {
+          "$ref": "#/$defs/ConfirmationMethod"
+        },
+        "source_hypothesis_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Hypothesis Id"
+        }
+      },
+      "required": [
+        "confirmed_fault_id",
+        "fault_code",
+        "confirmed_by",
+        "confirmed_at",
+        "confirmation_method"
+      ],
+      "title": "ConfirmedFault",
+      "type": "object"
+    },
+    "DataQualityStatus": {
+      "enum": [
+        "ACCEPTABLE",
+        "DEGRADED",
+        "INSUFFICIENT"
+      ],
+      "title": "DataQualityStatus",
+      "type": "string"
+    },
+    "DataQualitySummary": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/DataQualityStatus"
+        },
+        "expected_points": {
+          "minimum": 0,
+          "title": "Expected Points",
+          "type": "integer"
+        },
+        "observed_points": {
+          "minimum": 0,
+          "title": "Observed Points",
+          "type": "integer"
+        },
+        "valid_timestamp_points": {
+          "minimum": 0,
+          "title": "Valid Timestamp Points",
+          "type": "integer"
+        },
+        "completeness": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Completeness",
+          "type": "number"
+        },
+        "timestamp_parse_failure_count": {
+          "minimum": 0,
+          "title": "Timestamp Parse Failure Count",
+          "type": "integer"
+        },
+        "duplicate_count": {
+          "minimum": 0,
+          "title": "Duplicate Count",
+          "type": "integer"
+        },
+        "gap_count": {
+          "minimum": 0,
+          "title": "Gap Count",
+          "type": "integer"
+        },
+        "maximum_gap_seconds": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maximum Gap Seconds"
+        },
+        "allowed_analyses": {
+          "items": {
+            "$ref": "#/$defs/AllowedAnalysis"
+          },
+          "title": "Allowed Analyses",
+          "type": "array"
+        },
+        "warnings": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "status",
+        "expected_points",
+        "observed_points",
+        "valid_timestamp_points",
+        "completeness",
+        "timestamp_parse_failure_count",
+        "duplicate_count",
+        "gap_count",
+        "allowed_analyses"
+      ],
+      "title": "DataQualitySummary",
+      "type": "object"
+    },
+    "DiagnosisStatus": {
+      "enum": [
+        "NO_DATA",
+        "INSUFFICIENT_DATA",
+        "NO_DEVICE_EVENT_OR_ENABLED_ANOMALY",
+        "DEVICE_ALARM_REPORTED",
+        "DEVICE_FAULT_REPORTED",
+        "ANOMALY_DETECTED",
+        "HYPOTHESES_AVAILABLE",
+        "PARTIALLY_COMPLETED",
+        "FAILED"
+      ],
+      "title": "DiagnosisStatus",
+      "type": "string"
+    },
+    "DiagnosisVersions": {
+      "additionalProperties": false,
+      "properties": {
+        "rule_version": {
+          "minLength": 1,
+          "title": "Rule Version",
+          "type": "string"
+        },
+        "knowledge_version": {
+          "minLength": 1,
+          "title": "Knowledge Version",
+          "type": "string"
+        },
+        "model_version": {
+          "minLength": 1,
+          "title": "Model Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule_version",
+        "knowledge_version",
+        "model_version"
+      ],
+      "title": "DiagnosisVersions",
+      "type": "object"
+    },
+    "EventSource": {
+      "enum": [
+        "DEVICE_REPORTED"
+      ],
+      "title": "EventSource",
+      "type": "string"
+    },
+    "EventType": {
+      "enum": [
+        "FAULT",
+        "ALARM",
+        "STATUS_CHANGE"
+      ],
+      "title": "EventType",
+      "type": "string"
+    },
+    "Hypothesis": {
+      "additionalProperties": false,
+      "properties": {
+        "hypothesis_id": {
+          "minLength": 1,
+          "title": "Hypothesis Id",
+          "type": "string"
+        },
+        "hypothesis_code": {
+          "minLength": 1,
+          "title": "Hypothesis Code",
+          "type": "string"
+        },
+        "target_component": {
+          "$ref": "#/$defs/HypothesisTarget"
+        },
+        "score": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Score"
+        },
+        "supporting_evidence_ids": {
+          "default": [],
+          "items": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Supporting Evidence Ids",
+          "type": "array"
+        },
+        "contradicting_evidence_ids": {
+          "default": [],
+          "items": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Contradicting Evidence Ids",
+          "type": "array"
+        },
+        "unverified_conditions": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Unverified Conditions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "hypothesis_id",
+        "hypothesis_code",
+        "target_component"
+      ],
+      "title": "Hypothesis",
+      "type": "object"
+    },
+    "HypothesisTarget": {
+      "enum": [
+        "INVERTER",
+        "MOTOR",
+        "DRIVE_SYSTEM",
+        "UNKNOWN"
+      ],
+      "title": "HypothesisTarget",
+      "type": "string"
+    },
+    "ReportedEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "event_type": {
+          "$ref": "#/$defs/EventType"
+        },
+        "event_code": {
+          "minLength": 1,
+          "title": "Event Code",
+          "type": "string"
+        },
+        "reported_at": {
+          "format": "date-time",
+          "title": "Reported At",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/EventSource",
+          "default": "DEVICE_REPORTED"
+        },
+        "evidence_ids": {
+          "items": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "event_type",
+        "event_code",
+        "reported_at",
+        "evidence_ids"
+      ],
+      "title": "ReportedEvent",
+      "type": "object"
+    },
+    "TimeRange": {
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        },
+        "end": {
+          "format": "date-time",
+          "title": "End",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "title": "TimeRange",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "diagnosis_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Diagnosis Id",
+      "type": "string"
+    },
+    "asset_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Asset Id",
+      "type": "string"
+    },
+    "time_range": {
+      "$ref": "#/$defs/TimeRange"
+    },
+    "status": {
+      "$ref": "#/$defs/DiagnosisStatus"
+    },
+    "data_quality": {
+      "$ref": "#/$defs/DataQualitySummary"
+    },
+    "reported_events": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ReportedEvent"
+      },
+      "title": "Reported Events",
+      "type": "array"
+    },
+    "anomalies": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Anomaly"
+      },
+      "title": "Anomalies",
+      "type": "array"
+    },
+    "hypotheses": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Hypothesis"
+      },
+      "title": "Hypotheses",
+      "type": "array"
+    },
+    "confirmed_fault": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ConfirmedFault"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "evidence_ids": {
+      "default": [],
+      "items": {
+        "maxLength": 128,
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Evidence Ids",
+      "type": "array"
+    },
+    "versions": {
+      "$ref": "#/$defs/DiagnosisVersions"
+    }
+  },
+  "required": [
+    "diagnosis_id",
+    "asset_id",
+    "time_range",
+    "status",
+    "data_quality",
+    "versions"
+  ],
+  "title": "DiagnosisResult",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,0 +1,20 @@
+{
+  "asset_id": "asset-g120-1",
+  "time_range": {"start": "2026-01-14T06:00:00Z", "end": "2026-01-14T06:00:06Z"},
+  "points": [{
+    "observed_at": "2026-01-14T06:00:00Z",
+    "asset_id": "asset-g120-1",
+    "values": {"speed_actual": {"value": 10.0, "unit": null, "quality": "GOOD"}},
+    "source_record_ids": ["1"]
+  }],
+  "data_quality": {
+    "status": "ACCEPTABLE", "expected_points": 2, "observed_points": 2,
+    "valid_timestamp_points": 2, "completeness": 1.0,
+    "timestamp_parse_failure_count": 0, "duplicate_count": 0, "gap_count": 0,
+    "maximum_gap_seconds": 3.0,
+    "allowed_analyses": ["POINT_SUMMARY", "REPORTED_EVENT_DETECTION", "TREND_ANALYSIS", "DURATION_RULES"],
+    "warnings": []
+  },
+  "warnings": [],
+  "source_metadata": {"source_type": "REAL_DATA", "scanned_rows": 2, "matched_rows": 2, "discarded_duplicate_count": 0, "truncated": false}
+}

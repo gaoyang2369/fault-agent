@@ -1,0 +1,306 @@
+{
+  "$defs": {
+    "AllowedAnalysis": {
+      "enum": [
+        "POINT_SUMMARY",
+        "REPORTED_EVENT_DETECTION",
+        "TREND_ANALYSIS",
+        "DURATION_RULES"
+      ],
+      "title": "AllowedAnalysis",
+      "type": "string"
+    },
+    "DataQualityStatus": {
+      "enum": [
+        "ACCEPTABLE",
+        "DEGRADED",
+        "INSUFFICIENT"
+      ],
+      "title": "DataQualityStatus",
+      "type": "string"
+    },
+    "DataQualitySummary": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/DataQualityStatus"
+        },
+        "expected_points": {
+          "minimum": 0,
+          "title": "Expected Points",
+          "type": "integer"
+        },
+        "observed_points": {
+          "minimum": 0,
+          "title": "Observed Points",
+          "type": "integer"
+        },
+        "valid_timestamp_points": {
+          "minimum": 0,
+          "title": "Valid Timestamp Points",
+          "type": "integer"
+        },
+        "completeness": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Completeness",
+          "type": "number"
+        },
+        "timestamp_parse_failure_count": {
+          "minimum": 0,
+          "title": "Timestamp Parse Failure Count",
+          "type": "integer"
+        },
+        "duplicate_count": {
+          "minimum": 0,
+          "title": "Duplicate Count",
+          "type": "integer"
+        },
+        "gap_count": {
+          "minimum": 0,
+          "title": "Gap Count",
+          "type": "integer"
+        },
+        "maximum_gap_seconds": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maximum Gap Seconds"
+        },
+        "allowed_analyses": {
+          "items": {
+            "$ref": "#/$defs/AllowedAnalysis"
+          },
+          "title": "Allowed Analyses",
+          "type": "array"
+        },
+        "warnings": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "status",
+        "expected_points",
+        "observed_points",
+        "valid_timestamp_points",
+        "completeness",
+        "timestamp_parse_failure_count",
+        "duplicate_count",
+        "gap_count",
+        "allowed_analyses"
+      ],
+      "title": "DataQualitySummary",
+      "type": "object"
+    },
+    "SignalQuality": {
+      "enum": [
+        "GOOD",
+        "DEGRADED",
+        "BAD",
+        "MISSING"
+      ],
+      "title": "SignalQuality",
+      "type": "string"
+    },
+    "SignalValue": {
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Unit"
+        },
+        "quality": {
+          "$ref": "#/$defs/SignalQuality"
+        }
+      },
+      "required": [
+        "value",
+        "unit",
+        "quality"
+      ],
+      "title": "SignalValue",
+      "type": "object"
+    },
+    "SourceMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "source_type": {
+          "$ref": "#/$defs/SourceType",
+          "default": "REAL_DATA"
+        },
+        "scanned_rows": {
+          "minimum": 0,
+          "title": "Scanned Rows",
+          "type": "integer"
+        },
+        "matched_rows": {
+          "minimum": 0,
+          "title": "Matched Rows",
+          "type": "integer"
+        },
+        "discarded_duplicate_count": {
+          "minimum": 0,
+          "title": "Discarded Duplicate Count",
+          "type": "integer"
+        },
+        "truncated": {
+          "title": "Truncated",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "scanned_rows",
+        "matched_rows",
+        "discarded_duplicate_count",
+        "truncated"
+      ],
+      "title": "SourceMetadata",
+      "type": "object"
+    },
+    "SourceType": {
+      "enum": [
+        "REAL_DATA"
+      ],
+      "title": "SourceType",
+      "type": "string"
+    },
+    "TelemetryPoint": {
+      "additionalProperties": false,
+      "properties": {
+        "observed_at": {
+          "format": "date-time",
+          "title": "Observed At",
+          "type": "string"
+        },
+        "asset_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Asset Id",
+          "type": "string"
+        },
+        "values": {
+          "additionalProperties": {
+            "$ref": "#/$defs/SignalValue"
+          },
+          "title": "Values",
+          "type": "object"
+        },
+        "source_record_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Record Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "observed_at",
+        "asset_id",
+        "values",
+        "source_record_ids"
+      ],
+      "title": "TelemetryPoint",
+      "type": "object"
+    },
+    "TimeRange": {
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        },
+        "end": {
+          "format": "date-time",
+          "title": "End",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "title": "TimeRange",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "asset_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Asset Id",
+      "type": "string"
+    },
+    "time_range": {
+      "$ref": "#/$defs/TimeRange"
+    },
+    "points": {
+      "items": {
+        "$ref": "#/$defs/TelemetryPoint"
+      },
+      "title": "Points",
+      "type": "array"
+    },
+    "data_quality": {
+      "$ref": "#/$defs/DataQualitySummary"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    },
+    "source_metadata": {
+      "$ref": "#/$defs/SourceMetadata"
+    }
+  },
+  "required": [
+    "asset_id",
+    "time_range",
+    "points",
+    "data_quality",
+    "warnings",
+    "source_metadata"
+  ],
+  "title": "TelemetryQueryResult",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

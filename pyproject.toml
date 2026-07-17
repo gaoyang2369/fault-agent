@@ -17,6 +17,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "httpx>=0.28,<1.0",
+    "jsonschema>=4.25,<5.0",
     "mypy>=1.17,<2.0",
     "pytest>=8.4,<10.0",
     "ruff>=0.12,<1.0",
@@ -28,7 +29,7 @@ fault-agent-api = "apps.api.main:run"
 fault-agent-worker = "apps.agent_worker.main:main"
 
 [tool.setuptools.packages.find]
-include = ["apps*", "contracts*", "modules*", "tools*"]
+include = ["apps*", "contracts*", "modules*", "shared*", "tools*"]
 
 [tool.ruff]
 target-version = "py312"
@@ -45,7 +46,7 @@ indent-style = "space"
 [tool.mypy]
 python_version = "3.12"
 strict = true
-files = ["apps", "contracts", "modules", "tests", "tools"]
+files = ["apps", "contracts", "modules", "shared", "tests", "tools"]
 
 [tool.pytest.ini_options]
 addopts = "-ra --strict-config --strict-markers"

@@ -1,0 +1,10 @@
+{
+  "diagnosis_id": "diag-reported-fault", "asset_id": "asset-g120-1",
+  "time_range": {"start": "2026-01-14T06:00:00Z", "end": "2026-01-14T07:00:00Z"},
+  "status": "DEVICE_FAULT_REPORTED",
+  "data_quality": {"status": "ACCEPTABLE", "expected_points": 1200, "observed_points": 1200, "valid_timestamp_points": 1200, "completeness": 1.0, "timestamp_parse_failure_count": 0, "duplicate_count": 0, "gap_count": 0, "maximum_gap_seconds": 3.2, "allowed_analyses": ["POINT_SUMMARY", "REPORTED_EVENT_DETECTION", "TREND_ANALYSIS", "DURATION_RULES"], "warnings": []},
+  "reported_events": [{"event_type": "FAULT", "event_code": "F1030-0/0/0", "reported_at": "2026-01-14T06:20:00Z", "source": "DEVICE_REPORTED", "evidence_ids": ["ev-fault-1"]}],
+  "anomalies": [], "hypotheses": [], "confirmed_fault": null,
+  "evidence_ids": ["ev-fault-1"],
+  "versions": {"rule_version": "fixture:0.1.0", "knowledge_version": "none", "model_version": "none"}
+}

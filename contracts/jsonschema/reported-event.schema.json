@@ -1,0 +1,59 @@
+{
+  "$defs": {
+    "EventSource": {
+      "enum": [
+        "DEVICE_REPORTED"
+      ],
+      "title": "EventSource",
+      "type": "string"
+    },
+    "EventType": {
+      "enum": [
+        "FAULT",
+        "ALARM",
+        "STATUS_CHANGE"
+      ],
+      "title": "EventType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "event_type": {
+      "$ref": "#/$defs/EventType"
+    },
+    "event_code": {
+      "minLength": 1,
+      "title": "Event Code",
+      "type": "string"
+    },
+    "reported_at": {
+      "format": "date-time",
+      "title": "Reported At",
+      "type": "string"
+    },
+    "source": {
+      "$ref": "#/$defs/EventSource",
+      "default": "DEVICE_REPORTED"
+    },
+    "evidence_ids": {
+      "items": {
+        "maxLength": 128,
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Evidence Ids",
+      "type": "array"
+    }
+  },
+  "required": [
+    "event_type",
+    "event_code",
+    "reported_at",
+    "evidence_ids"
+  ],
+  "title": "ReportedEvent",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

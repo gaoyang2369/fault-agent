@@ -1,0 +1,107 @@
+{
+  "$defs": {
+    "AllowedAnalysis": {
+      "enum": [
+        "POINT_SUMMARY",
+        "REPORTED_EVENT_DETECTION",
+        "TREND_ANALYSIS",
+        "DURATION_RULES"
+      ],
+      "title": "AllowedAnalysis",
+      "type": "string"
+    },
+    "DataQualityStatus": {
+      "enum": [
+        "ACCEPTABLE",
+        "DEGRADED",
+        "INSUFFICIENT"
+      ],
+      "title": "DataQualityStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "status": {
+      "$ref": "#/$defs/DataQualityStatus"
+    },
+    "expected_points": {
+      "minimum": 0,
+      "title": "Expected Points",
+      "type": "integer"
+    },
+    "observed_points": {
+      "minimum": 0,
+      "title": "Observed Points",
+      "type": "integer"
+    },
+    "valid_timestamp_points": {
+      "minimum": 0,
+      "title": "Valid Timestamp Points",
+      "type": "integer"
+    },
+    "completeness": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Completeness",
+      "type": "number"
+    },
+    "timestamp_parse_failure_count": {
+      "minimum": 0,
+      "title": "Timestamp Parse Failure Count",
+      "type": "integer"
+    },
+    "duplicate_count": {
+      "minimum": 0,
+      "title": "Duplicate Count",
+      "type": "integer"
+    },
+    "gap_count": {
+      "minimum": 0,
+      "title": "Gap Count",
+      "type": "integer"
+    },
+    "maximum_gap_seconds": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Maximum Gap Seconds"
+    },
+    "allowed_analyses": {
+      "items": {
+        "$ref": "#/$defs/AllowedAnalysis"
+      },
+      "title": "Allowed Analyses",
+      "type": "array"
+    },
+    "warnings": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "status",
+    "expected_points",
+    "observed_points",
+    "valid_timestamp_points",
+    "completeness",
+    "timestamp_parse_failure_count",
+    "duplicate_count",
+    "gap_count",
+    "allowed_analyses"
+  ],
+  "title": "DataQualitySummary",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}
