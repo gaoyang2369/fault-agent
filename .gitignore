@@ -6,6 +6,9 @@ __pycache__/
 .mypy_cache/
 .pytest_cache/
 .ruff_cache/
+
+./vscode/
+
 real_data_profile.json
 real_data_profile.md
 
