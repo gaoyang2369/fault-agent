@@ -7,8 +7,7 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 
-./vscode/
+.vscode/
 
 real_data_profile.json
 real_data_profile.md
-

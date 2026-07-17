@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping, Sequence
-from datetime import UTC, date, datetime, time
+from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
 from typing import Any, Protocol, cast
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -74,11 +74,15 @@ class RepositoryResult:
         warnings: list[DataQualityWarning],
         scanned_rows: int,
         truncated: bool,
+        discarded_duplicate_count: int,
+        timestamp_parse_failure_count: int,
     ) -> None:
         self.rows = rows
         self.warnings = warnings
         self.scanned_rows = scanned_rows
         self.truncated = truncated
+        self.discarded_duplicate_count = discarded_duplicate_count
+        self.timestamp_parse_failure_count = timestamp_parse_failure_count
 
 
 class RealDataRepository:
@@ -89,6 +93,7 @@ class RealDataRepository:
         executor: QueryExecutor,
         *,
         source_timezone: str,
+        create_time_filter_buffer_seconds: float,
         max_scan_rows: int = 100_000,
     ) -> None:
         if not source_timezone.strip():
@@ -99,8 +104,11 @@ class RealDataRepository:
             raise ValueError("source_timezone is not a valid IANA timezone") from error
         if max_scan_rows <= 0:
             raise ValueError("max_scan_rows must be greater than zero")
+        if create_time_filter_buffer_seconds < 0:
+            raise ValueError("create_time_filter_buffer_seconds must not be negative")
         self._executor = executor
         self._max_scan_rows = max_scan_rows
+        self._create_time_filter_buffer = timedelta(seconds=create_time_filter_buffer_seconds)
 
     def query(
         self,
@@ -122,9 +130,15 @@ class RealDataRepository:
         if inverter_name is not None:
             clauses.append("`inverter_name` = %s")
             parameters.append(inverter_name)
-        if clauses:
-            sql += " WHERE " + " AND ".join(clauses)
-        sql += " ORDER BY `id` ASC LIMIT %s"
+        # TODO-DOMAIN: confirm the formal relationship and maximum lag between
+        # create_time (candidate ingestion time) and observed_at. Until then,
+        # create_time is only a coarse SQL filter with a configured buffer.
+        coarse_start = self._to_source_naive(start - self._create_time_filter_buffer)
+        coarse_end = self._to_source_naive(end + self._create_time_filter_buffer)
+        clauses.extend(("`create_time` >= %s", "`create_time` < %s"))
+        parameters.extend((coarse_start, coarse_end))
+        sql += " WHERE " + " AND ".join(clauses)
+        sql += " ORDER BY `create_time` ASC, `id` ASC LIMIT %s"
         parameters.append(self._max_scan_rows + 1)
         self._assert_read_only(sql)
         fetched = self._executor.fetch_all(sql, tuple(parameters))
@@ -132,26 +146,34 @@ class RealDataRepository:
         source_rows = fetched[: self._max_scan_rows]
         warnings: list[DataQualityWarning] = []
         normalized: list[NormalizedRow] = []
+        timestamp_parse_failure_count = 0
         for row in source_rows:
             observed_at, row_warnings = self._normalize_observed_at(row)
             warnings.extend(row_warnings)
+            if observed_at is None:
+                timestamp_parse_failure_count += 1
             if observed_at is not None and start <= observed_at < end:
                 normalized.append(NormalizedRow(row, observed_at))
-        duplicate_ids: dict[tuple[object, object, datetime], list[str]] = {}
+        duplicate_groups: dict[tuple[object, object, datetime], list[NormalizedRow]] = {}
         for normalized_row in normalized:
             key = (
                 normalized_row.raw.get("device_name"),
                 normalized_row.raw.get("inverter_name"),
                 normalized_row.observed_at,
             )
-            duplicate_ids.setdefault(key, []).append(str(normalized_row.raw.get("id")))
-        for record_ids in duplicate_ids.values():
-            if len(record_ids) > 1:
+            duplicate_groups.setdefault(key, []).append(normalized_row)
+        deduplicated: list[NormalizedRow] = []
+        discarded_duplicate_count = 0
+        for duplicate_rows in duplicate_groups.values():
+            retained = max(duplicate_rows, key=self._deduplication_order)
+            deduplicated.append(retained)
+            if len(duplicate_rows) > 1:
+                discarded_duplicate_count += len(duplicate_rows) - 1
                 warnings.append(
                     DataQualityWarning(
                         code="DUPLICATE_SOURCE_RECORD",
                         message="multiple source rows share the same identity and observed_at",
-                        source_record_ids=tuple(record_ids),
+                        source_record_ids=tuple(str(row.raw.get("id")) for row in duplicate_rows),
                     )
                 )
         if truncated:
@@ -161,7 +183,29 @@ class RealDataRepository:
                     message="source scan limit reached; the result may be incomplete",
                 )
             )
-        return RepositoryResult(normalized, warnings, len(source_rows), truncated)
+        deduplicated.sort(key=lambda row: row.observed_at)
+        return RepositoryResult(
+            deduplicated,
+            warnings,
+            len(source_rows),
+            truncated,
+            discarded_duplicate_count,
+            timestamp_parse_failure_count,
+        )
+
+    def _to_source_naive(self, value: datetime) -> datetime:
+        return value.astimezone(self._source_timezone).replace(tzinfo=None)
+
+    def _deduplication_order(self, row: NormalizedRow) -> tuple[datetime, tuple[int, object]]:
+        create_time = self._parse_datetime(row.raw.get("create_time")) or datetime.min.replace(
+            tzinfo=UTC
+        )
+        raw_id = row.raw.get("id")
+        try:
+            id_order: tuple[int, object] = (1, int(str(raw_id)))
+        except (TypeError, ValueError):
+            id_order = (0, str(raw_id or ""))
+        return create_time, id_order
 
     @staticmethod
     def _validate_signals(signals: Sequence[str]) -> tuple[str, ...]:

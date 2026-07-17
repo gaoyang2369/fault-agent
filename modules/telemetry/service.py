@@ -3,12 +3,19 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from datetime import UTC, timedelta
+from itertools import pairwise
+from math import ceil
+from typing import Protocol
 
 from modules.telemetry.models import (
     AggregationFunction,
+    DataQualitySettings,
+    DataQualityStatus,
+    DataQualitySummary,
     DataQualityWarning,
+    RequestContext,
     SignalValue,
     TelemetryPoint,
     TelemetryQuery,
@@ -18,11 +25,22 @@ from modules.telemetry.repository import (
     NUMERIC_SIGNALS,
     NormalizedRow,
     RealDataRepository,
+    RepositoryResult,
     numeric_value,
     raw_value,
 )
 
-type QueryPolicy = Callable[[TelemetryQuery], TelemetryQuery]
+
+class TelemetryPolicy(Protocol):
+    def authorize(self, command: TelemetryQuery, context: RequestContext) -> TelemetryQuery: ...
+
+
+class AllowAllTelemetryPolicy:
+    """Temporary deterministic policy until Task 5 supplies IAM-backed policy."""
+
+    def authorize(self, command: TelemetryQuery, context: RequestContext) -> TelemetryQuery:
+        del context
+        return command
 
 
 class TelemetryQueryService:
@@ -32,17 +50,19 @@ class TelemetryQueryService:
         self,
         repository: RealDataRepository,
         *,
+        quality_settings: DataQualitySettings,
         max_return_points: int = 10_000,
-        policy: QueryPolicy | None = None,
+        policy: TelemetryPolicy | None = None,
     ) -> None:
         if max_return_points <= 0:
             raise ValueError("max_return_points must be greater than zero")
         self._repository = repository
         self._max_return_points = max_return_points
-        self._policy = policy
+        self._quality_settings = quality_settings
+        self._policy = policy or AllowAllTelemetryPolicy()
 
-    def query(self, request: TelemetryQuery) -> TelemetryQueryResult:
-        authorized = self._policy(request) if self._policy is not None else request
+    def query(self, command: TelemetryQuery, context: RequestContext) -> TelemetryQueryResult:
+        authorized = self._policy.authorize(command, context)
         maximum = min(authorized.max_points, self._max_return_points)
         repository_result = self._repository.query(
             device_name=authorized.device_name,
@@ -74,7 +94,72 @@ class TelemetryQueryService:
             warnings=tuple(warnings),
             scanned_rows=repository_result.scanned_rows,
             matched_rows=matched_rows,
+            discarded_duplicate_count=repository_result.discarded_duplicate_count,
             truncated=repository_result.truncated or result_truncated,
+            data_quality=self._summarize_quality(
+                authorized, repository_result.rows, repository_result
+            ),
+        )
+
+    def _summarize_quality(
+        self,
+        command: TelemetryQuery,
+        rows: Sequence[NormalizedRow],
+        repository_result: RepositoryResult,
+    ) -> DataQualitySummary:
+        gaps: list[float] = []
+        groups: defaultdict[tuple[str | None, str | None], list[NormalizedRow]] = defaultdict(list)
+        for row in rows:
+            groups[
+                (
+                    _optional_text(row.raw.get("device_name")),
+                    _optional_text(row.raw.get("inverter_name")),
+                )
+            ].append(row)
+        for group_rows in groups.values():
+            ordered = sorted(group_rows, key=lambda row: row.observed_at)
+            gaps.extend(
+                (current.observed_at - previous.observed_at).total_seconds()
+                for previous, current in pairwise(ordered)
+            )
+        duration_seconds = (command.end - command.start).total_seconds()
+        expected_per_series = ceil(
+            duration_seconds / self._quality_settings.nominal_interval_seconds
+        )
+        expected_points = expected_per_series * max(len(groups), 1)
+        observed_points = len(rows)
+        completeness = min(observed_points / expected_points, 1.0) if expected_points else 0.0
+        gap_count = sum(gap > self._quality_settings.gap_warning_seconds for gap in gaps)
+        if (
+            repository_result.truncated
+            or completeness < self._quality_settings.insufficient_completeness
+        ):
+            status = DataQualityStatus.INSUFFICIENT
+        elif (
+            completeness < self._quality_settings.acceptable_completeness
+            or repository_result.timestamp_parse_failure_count > 0
+            or repository_result.discarded_duplicate_count > 0
+            or gap_count > 0
+        ):
+            status = DataQualityStatus.DEGRADED
+        else:
+            status = DataQualityStatus.ACCEPTABLE
+        allowed = ["POINT", "REPORTED_EVENT"]
+        if status is not DataQualityStatus.INSUFFICIENT:
+            allowed.append("TREND")
+            if gap_count == 0:
+                allowed.append("DURATION")
+        return DataQualitySummary(
+            status=status,
+            expected_points=expected_points,
+            observed_points=observed_points,
+            valid_timestamp_points=(observed_points + repository_result.discarded_duplicate_count),
+            completeness=completeness,
+            timestamp_parse_failure_count=repository_result.timestamp_parse_failure_count,
+            duplicate_count=repository_result.discarded_duplicate_count,
+            gap_count=gap_count,
+            maximum_gap_seconds=max(gaps) if gaps else None,
+            allowed_analyses=tuple(allowed),
         )
 
     @staticmethod

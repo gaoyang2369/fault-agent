@@ -11,6 +11,7 @@ import pymysql
 from pymysql.connections import Connection
 from pymysql.cursors import DictCursor
 
+from modules.telemetry.models import DataQualitySettings
 from modules.telemetry.repository import RealDataRepository, Row
 from modules.telemetry.service import TelemetryQueryService
 from tools.profile_real_data import parse_mysql_dsn
@@ -65,11 +66,15 @@ def create_repository_from_environment() -> tuple[RealDataRepository, MySQLQuery
         raise ValueError("REAL_DATA_TABLE must be real_data")
     timeout_seconds = int(os.getenv("REAL_DATA_QUERY_TIMEOUT_SECONDS", "15"))
     max_scan_rows = int(os.getenv("REAL_DATA_MAX_SCAN_ROWS", "100000"))
+    create_time_filter_buffer_seconds = _required_float(
+        "REAL_DATA_CREATE_TIME_FILTER_BUFFER_SECONDS"
+    )
     executor = MySQLQueryExecutor.connect(dsn, timeout_seconds=timeout_seconds)
     return (
         RealDataRepository(
             executor,
             source_timezone=source_timezone,
+            create_time_filter_buffer_seconds=create_time_filter_buffer_seconds,
             max_scan_rows=max_scan_rows,
         ),
         executor,
@@ -80,7 +85,24 @@ def create_service_from_environment() -> tuple[TelemetryQueryService, MySQLQuery
     """Create the shared application service with configured safety limits."""
     repository, executor = create_repository_from_environment()
     max_return_points = int(os.getenv("TELEMETRY_MAX_RETURN_POINTS", "10000"))
+    quality_settings = DataQualitySettings(
+        nominal_interval_seconds=_required_float("TELEMETRY_NOMINAL_INTERVAL_SECONDS"),
+        gap_warning_seconds=_required_float("TELEMETRY_GAP_WARNING_SECONDS"),
+        acceptable_completeness=_required_float("TELEMETRY_ACCEPTABLE_COMPLETENESS"),
+        insufficient_completeness=_required_float("TELEMETRY_INSUFFICIENT_COMPLETENESS"),
+    )
     return (
-        TelemetryQueryService(repository, max_return_points=max_return_points),
+        TelemetryQueryService(
+            repository,
+            quality_settings=quality_settings,
+            max_return_points=max_return_points,
+        ),
         executor,
     )
+
+
+def _required_float(name: str) -> float:
+    raw_value = os.getenv(name)
+    if raw_value is None:
+        raise ValueError(f"{name} must be configured")
+    return float(raw_value)

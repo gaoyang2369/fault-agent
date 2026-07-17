@@ -3,7 +3,11 @@
 from modules.telemetry.models import (
     AggregationFunction,
     AggregationSpec,
+    DataQualitySettings,
+    DataQualityStatus,
+    DataQualitySummary,
     DataQualityWarning,
+    RequestContext,
     TelemetryPoint,
     TelemetryQuery,
     TelemetryQueryResult,
@@ -14,14 +18,19 @@ from modules.telemetry.mysql import (
     create_service_from_environment,
 )
 from modules.telemetry.repository import RealDataRepository
-from modules.telemetry.service import TelemetryQueryService
+from modules.telemetry.service import AllowAllTelemetryPolicy, TelemetryQueryService
 
 __all__ = [
     "AggregationFunction",
     "AggregationSpec",
+    "AllowAllTelemetryPolicy",
+    "DataQualitySettings",
+    "DataQualityStatus",
+    "DataQualitySummary",
     "DataQualityWarning",
     "MySQLQueryExecutor",
     "RealDataRepository",
+    "RequestContext",
     "TelemetryPoint",
     "TelemetryQuery",
     "TelemetryQueryResult",
