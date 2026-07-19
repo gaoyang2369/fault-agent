@@ -3,7 +3,7 @@
 from modules.asset.application.service import AssetSourceResolver
 from modules.telemetry.application.commands import TelemetryQueryCommand
 from modules.telemetry.application.ports import (
-    AllowAllTelemetryPolicy,
+    DenyAllTelemetryPolicy,
     TelemetryAuthorizationPolicy,
     TelemetryQueryBackend,
 )
@@ -25,7 +25,7 @@ class TelemetryQueryService:
 
         self._resolver = resolver
         self._backend = backend
-        self._policy = policy or AllowAllTelemetryPolicy()
+        self._policy = policy or DenyAllTelemetryPolicy()
 
     async def query(
         self, command: TelemetryQueryCommand, context: RequestContext
@@ -36,8 +36,8 @@ class TelemetryQueryService:
         asset = self._resolver.resolve_asset(
             asset_id=command.asset_id, asset_code=command.asset_code
         )
-        locator = self._resolver.resolve_source(asset.asset_id)
         authorized = self._policy.authorize(command, asset, context)
+        locator = self._resolver.resolve_source(asset.asset_id)
         return self._backend.query(
             asset_id=asset.asset_id,
             source_locator=locator,

@@ -8,13 +8,24 @@ from fastapi import FastAPI
 from apps.api.composition import ApiCompositionRoot
 from apps.api.routers.health import router as health_router
 from apps.api.routers.telemetry import router as telemetry_router
+from modules.iam.application.policy import IamAuthorizationPolicy
+from modules.iam.application.ports import AuthenticationBackend
 from modules.telemetry.application.service import TelemetryQueryService
 
 
-def create_app(telemetry_service: TelemetryQueryService | None = None) -> FastAPI:
+def create_app(
+    telemetry_service: TelemetryQueryService | None = None,
+    *,
+    authentication_backend: AuthenticationBackend | None = None,
+    iam_policy: IamAuthorizationPolicy | None = None,
+) -> FastAPI:
     """创建并装配 HTTP 应用，启动阶段不连接外部基础设施。"""
 
-    composition = ApiCompositionRoot(telemetry_service)
+    composition = ApiCompositionRoot(
+        telemetry_service,
+        authentication_backend=authentication_backend,
+        iam_policy=iam_policy,
+    )
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:

@@ -9,13 +9,16 @@ from httpx import ASGITransport, AsyncClient
 from apps.api.main import create_app
 from modules.asset.application.service import AssetSourceResolver
 from modules.asset.infrastructure.in_memory_repository import InMemoryAssetRepository
-from modules.telemetry.application.ports import GuestTelemetryPolicy
+from modules.iam.application.policy import IamAuthorizationPolicy
+from modules.iam.domain.models import IamPolicyConfig, TrustedPrincipal
+from modules.iam.infrastructure.authentication import InMemoryBearerAuthenticationBackend
 from modules.telemetry.application.service import TelemetryQueryService
 from modules.telemetry.infrastructure.real_data_repository import (
     DataQualitySettings,
     RealDataRepository,
     Row,
 )
+from shared.context import Role
 
 
 class HttpFixtureExecutor:
@@ -30,7 +33,7 @@ class HttpFixtureExecutor:
         ]
 
 
-def _service() -> TelemetryQueryService:
+def _service(policy: IamAuthorizationPolicy | None = None) -> TelemetryQueryService:
     repository = RealDataRepository(
         HttpFixtureExecutor(),
         source_timezone="UTC",
@@ -45,8 +48,9 @@ def _service() -> TelemetryQueryService:
     return TelemetryQueryService(
         AssetSourceResolver(InMemoryAssetRepository.g120_fixture()),
         repository,
-        policy=GuestTelemetryPolicy(
-            frozenset({"asset-g120-1"}),
+        policy=policy
+        or IamAuthorizationPolicy(
+            IamPolicyConfig(guest_visible_asset_ids=frozenset({"asset-g120-1"})),
             now=lambda: datetime(2026, 1, 14, 6, 0, 6, tzinfo=UTC),
         ),
     )
@@ -68,7 +72,7 @@ def test_public_telemetry_route_uses_injected_composition_root() -> None:
                         "end": "2026-01-14T06:00:06Z",
                     },
                     "signal_codes": ["speed_actual"],
-                    "aggregation": {"window_seconds": 3, "functions": ["AVG"]},
+                    "aggregation": {"window_seconds": 60, "functions": ["AVG"]},
                     "max_points": 100,
                 },
             )
@@ -112,3 +116,75 @@ def test_public_telemetry_route_enforces_guest_aggregation() -> None:
 
     assert status_code == 403
     assert payload["error"]["code"] == "TELEMETRY_ACCESS_DENIED"  # type: ignore[index]
+
+
+def test_http_authentication_boundary_supplies_engineer_identity_and_scope() -> None:
+    """验证 HTTP payload 不能自报身份，Bearer 认证结果决定工程师资产范围。"""
+
+    async def request_as_engineer(payload: dict[str, object]) -> tuple[int, dict[str, object]]:
+        principal = TrustedPrincipal(
+            user_id="engineer-1",
+            roles=frozenset({Role.ENGINEER}),
+            authenticated_at=datetime(2026, 1, 14, 6, tzinfo=UTC),
+        )
+        authentication = InMemoryBearerAuthenticationBackend({"engineer-token": principal})
+        iam = IamAuthorizationPolicy(
+            IamPolicyConfig(engineer_asset_assignments={"engineer-1": frozenset({"asset-g120-1"})})
+        )
+        app = create_app(
+            _service(iam),
+            authentication_backend=authentication,
+            iam_policy=iam,
+        )
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            response = await client.post(
+                "/v1/telemetry/queries",
+                headers={"Authorization": "Bearer engineer-token"},
+                json=payload,
+            )
+        return response.status_code, response.json()
+
+    base: dict[str, object] = {
+        "asset_code": "G120-1",
+        "time_range": {
+            "start": "2026-01-14T06:00:00Z",
+            "end": "2026-01-14T06:00:06Z",
+        },
+        "signal_codes": ["speed_actual"],
+    }
+    status_code, _ = asyncio.run(request_as_engineer(base))
+    spoofed_status, _ = asyncio.run(
+        request_as_engineer({**base, "role": "ADMIN", "user_id": "attacker"})
+    )
+
+    assert status_code == 200
+    assert spoofed_status == 422
+
+
+def test_invalid_bearer_token_returns_unauthorized() -> None:
+    """验证无效认证凭据在调用应用服务前返回 401。"""
+
+    async def request_with_invalid_token() -> tuple[int, dict[str, object]]:
+        app = create_app(
+            _service(),
+            authentication_backend=InMemoryBearerAuthenticationBackend({}),
+        )
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            response = await client.post(
+                "/v1/telemetry/queries",
+                headers={"Authorization": "Bearer invalid"},
+                json={
+                    "asset_code": "G120-1",
+                    "time_range": {
+                        "start": "2026-01-14T06:00:00Z",
+                        "end": "2026-01-14T06:00:06Z",
+                    },
+                    "signal_codes": ["speed_actual"],
+                    "aggregation": {"window_seconds": 60, "functions": ["AVG"]},
+                },
+            )
+        return response.status_code, response.json()
+
+    status_code, payload = asyncio.run(request_with_invalid_token())
+    assert status_code == 401
+    assert payload["error"]["code"] == "AUTHENTICATION_REQUIRED"  # type: ignore[index]

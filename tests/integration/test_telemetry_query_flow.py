@@ -6,6 +6,8 @@ from datetime import UTC, datetime
 
 from modules.asset.application.service import AssetSourceResolver
 from modules.asset.infrastructure.in_memory_repository import InMemoryAssetRepository
+from modules.iam.application.policy import IamAuthorizationPolicy
+from modules.iam.domain.models import IamPolicyConfig
 from modules.telemetry.application.commands import (
     AggregationFunction,
     AggregationSpec,
@@ -84,7 +86,11 @@ def test_normalized_aggregated_public_query_flow() -> None:
         ),
     )
     service = TelemetryQueryService(
-        AssetSourceResolver(InMemoryAssetRepository.g120_fixture()), repository
+        AssetSourceResolver(InMemoryAssetRepository.g120_fixture()),
+        repository,
+        policy=IamAuthorizationPolicy(
+            IamPolicyConfig(engineer_asset_assignments={"engineer-1": frozenset({"asset-g120-1"})})
+        ),
     )
     request = TelemetryQueryCommand.model_validate(
         {

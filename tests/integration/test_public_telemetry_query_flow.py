@@ -5,6 +5,8 @@ from collections.abc import Sequence
 
 from modules.asset.application.service import AssetSourceResolver
 from modules.asset.infrastructure.in_memory_repository import InMemoryAssetRepository
+from modules.iam.application.policy import IamAuthorizationPolicy
+from modules.iam.domain.models import IamPolicyConfig
 from modules.telemetry.application.commands import TelemetryQueryCommand
 from modules.telemetry.application.service import TelemetryQueryService
 from modules.telemetry.infrastructure.real_data_repository import (
@@ -48,7 +50,13 @@ def test_public_flow_uses_asset_and_does_not_return_locator_fields() -> None:
             insufficient_completeness=0.8,
         ),
     )
-    service = TelemetryQueryService(AssetSourceResolver(assets), repository)
+    service = TelemetryQueryService(
+        AssetSourceResolver(assets),
+        repository,
+        policy=IamAuthorizationPolicy(
+            IamPolicyConfig(engineer_asset_assignments={"engineer-1": frozenset({"asset-g120-1"})})
+        ),
+    )
 
     result = asyncio.run(
         service.query(

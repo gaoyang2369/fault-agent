@@ -10,9 +10,9 @@ from apps.api.composition import (
     TelemetryInfrastructureUnavailableError,
 )
 from modules.asset.application.service import AssetNotFoundError
+from modules.iam.application.ports import AuthenticationError
 from modules.telemetry.application.commands import TelemetryQueryCommand
 from modules.telemetry.application.results import TelemetryQueryResult
-from shared.context import RequestContext, RequestSource, Role
 from shared.errors import ErrorDetail, ErrorResponse
 
 router = APIRouter(prefix="/v1/telemetry", tags=["telemetry"])
@@ -23,6 +23,7 @@ router = APIRouter(prefix="/v1/telemetry", tags=["telemetry"])
     response_model=TelemetryQueryResult,
     responses={
         status.HTTP_400_BAD_REQUEST: {"model": ErrorResponse},
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorResponse},
         status.HTTP_403_FORBIDDEN: {"model": ErrorResponse},
         status.HTTP_404_NOT_FOUND: {"model": ErrorResponse},
         status.HTTP_503_SERVICE_UNAVAILABLE: {"model": ErrorResponse},
@@ -34,16 +35,13 @@ async def query_telemetry(
     """从可信 HTTP 边界构造上下文，并复用公共遥测应用服务。"""
 
     trace_id = str(uuid4())
-    context = RequestContext(
-        request_id=str(uuid4()),
-        trace_id=trace_id,
-        # TODO-SECURITY: Task 5 接入真实认证后，由认证适配器提供用户和角色。
-        user_id="unauthenticated-http-client",
-        roles=frozenset({Role.GUEST}),
-        request_source=RequestSource.HTTP,
-    )
     composition = _composition_root(request)
     try:
+        context = composition.authenticate_http(
+            request.headers.get("Authorization"),
+            request_id=str(uuid4()),
+            trace_id=trace_id,
+        )
         service = composition.telemetry_service()
         return await service.query(command, context)
     except AssetNotFoundError:
@@ -57,6 +55,13 @@ async def query_telemetry(
         return _error_response(
             status.HTTP_400_BAD_REQUEST,
             "INVALID_TELEMETRY_QUERY",
+            str(error),
+            trace_id,
+        )
+    except AuthenticationError as error:
+        return _error_response(
+            status.HTTP_401_UNAUTHORIZED,
+            "AUTHENTICATION_REQUIRED",
             str(error),
             trace_id,
         )

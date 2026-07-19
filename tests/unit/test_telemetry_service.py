@@ -9,6 +9,8 @@ from pydantic import ValidationError
 
 from modules.asset.application.service import AssetSourceResolver
 from modules.asset.infrastructure.in_memory_repository import InMemoryAssetRepository
+from modules.iam.application.policy import IamAuthorizationPolicy
+from modules.iam.domain.models import IamPolicyConfig
 from modules.telemetry.application.commands import (
     AggregationFunction,
     AggregationSpec,
@@ -87,10 +89,15 @@ def service(
         quality_settings=settings or quality_settings(),
         max_return_points=max_return_points,
     )
+    effective_policy = policy or IamAuthorizationPolicy(
+        IamPolicyConfig(
+            engineer_asset_assignments={"authenticated-user": frozenset({"asset-g120-1"})}
+        )
+    )
     return TelemetryQueryService(
         AssetSourceResolver(InMemoryAssetRepository.g120_fixture()),
         repository,
-        policy=policy,
+        policy=effective_policy,
     )
 
 
