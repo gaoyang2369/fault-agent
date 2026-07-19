@@ -2,6 +2,7 @@
   "$defs": {
     "ErrorDetail": {
       "additionalProperties": false,
+      "description": "描述机器可读错误码、提示、详情、重试属性和追踪标识。",
       "properties": {
         "code": {
           "minLength": 1,
@@ -42,6 +43,7 @@
     "JsonValue": {}
   },
   "additionalProperties": false,
+  "description": "公开 API 的统一错误响应外层对象。",
   "properties": {
     "error": {
       "$ref": "#/$defs/ErrorDetail"
@@ -52,5 +54,7 @@
   ],
   "title": "ErrorResponse",
   "type": "object",
-  "$schema": "https://json-schema.org/draft/2020-12/schema"
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fault-agent:contract:1.0.0:error-response",
+  "x-contract-version": "1.0.0"
 }

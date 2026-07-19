@@ -1,0 +1,92 @@
+{
+  "$defs": {
+    "EvidenceStatus": {
+      "description": "声明当前证据是否充分的状态。",
+      "enum": [
+        "SUFFICIENT",
+        "INSUFFICIENT"
+      ],
+      "title": "EvidenceStatus",
+      "type": "string"
+    },
+    "RecommendationPriority": {
+      "description": "用于排序建议的业务优先级，不代表工业安全等级。",
+      "enum": [
+        "LOW",
+        "MEDIUM",
+        "HIGH"
+      ],
+      "title": "RecommendationPriority",
+      "type": "string"
+    },
+    "RecommendationType": {
+      "description": "只读诊断可给出的非控制类后续建议。",
+      "enum": [
+        "INSPECTION",
+        "DATA_COLLECTION",
+        "KNOWLEDGE_REVIEW"
+      ],
+      "title": "RecommendationType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "表示尚未执行的检查或信息收集建议，不包含设备控制动作。",
+  "properties": {
+    "recommendation_id": {
+      "minLength": 1,
+      "title": "Recommendation Id",
+      "type": "string"
+    },
+    "recommendation_code": {
+      "minLength": 1,
+      "title": "Recommendation Code",
+      "type": "string"
+    },
+    "recommendation_type": {
+      "$ref": "#/$defs/RecommendationType"
+    },
+    "priority": {
+      "$ref": "#/$defs/RecommendationPriority"
+    },
+    "description": {
+      "minLength": 1,
+      "title": "Description",
+      "type": "string"
+    },
+    "related_hypothesis_ids": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Related Hypothesis Ids",
+      "type": "array"
+    },
+    "supporting_evidence_ids": {
+      "default": [],
+      "items": {
+        "maxLength": 128,
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Supporting Evidence Ids",
+      "type": "array"
+    },
+    "evidence_status": {
+      "$ref": "#/$defs/EvidenceStatus",
+      "default": "SUFFICIENT"
+    }
+  },
+  "required": [
+    "recommendation_id",
+    "recommendation_code",
+    "recommendation_type",
+    "priority",
+    "description"
+  ],
+  "title": "Recommendation",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fault-agent:contract:1.0.0:recommendation",
+  "x-contract-version": "1.0.0"
+}

@@ -1,0 +1,77 @@
+{
+  "$defs": {
+    "ComponentType": {
+      "description": "驱动系统内可独立识别的组件类型枚举。",
+      "enum": [
+        "INVERTER",
+        "MOTOR"
+      ],
+      "title": "ComponentType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "描述属于某一资产的变频器或电机组件及其已知身份信息。",
+  "properties": {
+    "component_id": {
+      "minLength": 1,
+      "title": "Component Id",
+      "type": "string"
+    },
+    "asset_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Asset Id",
+      "type": "string"
+    },
+    "component_type": {
+      "$ref": "#/$defs/ComponentType"
+    },
+    "manufacturer": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Manufacturer"
+    },
+    "model": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Model"
+    },
+    "firmware_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Firmware Version"
+    }
+  },
+  "required": [
+    "component_id",
+    "asset_id",
+    "component_type"
+  ],
+  "title": "Component",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fault-agent:contract:1.0.0:component",
+  "x-contract-version": "1.0.0"
+}

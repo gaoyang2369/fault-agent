@@ -21,7 +21,8 @@ pytest
 uvicorn apps.api.main:app --reload
 ```
 
-健康检查：`GET /health`。
+健康检查：`GET /health`。公开遥测查询：`POST /v1/telemetry/queries`；真实 IAM 接入前，HTTP
+调用按游客策略限制为白名单资产、最长一小时和聚合数据。
 
 ## real_data 只读摸底
 

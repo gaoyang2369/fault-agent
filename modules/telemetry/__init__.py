@@ -1,40 +1,17 @@
-"""只读遥测访问及应用查询服务模块。"""
+"""公开遥测应用契约，源表模型仅存在于 infrastructure 子包。"""
 
-from modules.telemetry.models import (
+from modules.telemetry.application.commands import (
     AggregationFunction,
     AggregationSpec,
-    DataQualitySettings,
-    DataQualityStatus,
-    DataQualitySummary,
-    DataQualityWarning,
-    RequestContext,
-    TelemetryPoint,
-    TelemetryQuery,
-    TelemetryQueryResult,
+    TelemetryQueryCommand,
 )
-from modules.telemetry.mysql import (
-    MySQLQueryExecutor,
-    create_repository_from_environment,
-    create_service_from_environment,
-)
-from modules.telemetry.repository import RealDataRepository
-from modules.telemetry.service import AllowAllTelemetryPolicy, TelemetryQueryService
+from modules.telemetry.application.results import TelemetryQueryResult
+from modules.telemetry.application.service import TelemetryQueryService
 
 __all__ = [
     "AggregationFunction",
     "AggregationSpec",
-    "AllowAllTelemetryPolicy",
-    "DataQualitySettings",
-    "DataQualityStatus",
-    "DataQualitySummary",
-    "DataQualityWarning",
-    "MySQLQueryExecutor",
-    "RealDataRepository",
-    "RequestContext",
-    "TelemetryPoint",
-    "TelemetryQuery",
+    "TelemetryQueryCommand",
     "TelemetryQueryResult",
     "TelemetryQueryService",
-    "create_repository_from_environment",
-    "create_service_from_environment",
 ]

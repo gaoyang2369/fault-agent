@@ -1,6 +1,7 @@
 {
   "$defs": {
     "AllowedAnalysis": {
+      "description": "在当前数据质量下允许执行的分析类别。",
       "enum": [
         "POINT_SUMMARY",
         "REPORTED_EVENT_DETECTION",
@@ -11,6 +12,7 @@
       "type": "string"
     },
     "DataQualityStatus": {
+      "description": "查询数据整体质量状态。",
       "enum": [
         "ACCEPTABLE",
         "DEGRADED",
@@ -21,6 +23,7 @@
     },
     "DataQualitySummary": {
       "additionalProperties": false,
+      "description": "汇总完整率、时间解析、重复与间隔质量，并声明允许的分析。",
       "properties": {
         "status": {
           "$ref": "#/$defs/DataQualityStatus"
@@ -105,6 +108,7 @@
       "type": "object"
     },
     "SignalQuality": {
+      "description": "单个信号值的数据质量等级。",
       "enum": [
         "GOOD",
         "DEGRADED",
@@ -116,6 +120,7 @@
     },
     "SignalValue": {
       "additionalProperties": false,
+      "description": "携带值、显式单位和质量状态的信号值对象。",
       "properties": {
         "value": {
           "anyOf": [
@@ -159,6 +164,7 @@
     },
     "SourceMetadata": {
       "additionalProperties": false,
+      "description": "描述一次查询的扫描、匹配、去重和截断情况。",
       "properties": {
         "source_type": {
           "$ref": "#/$defs/SourceType",
@@ -194,6 +200,7 @@
       "type": "object"
     },
     "SourceType": {
+      "description": "对外可披露的数据来源类别。",
       "enum": [
         "REAL_DATA"
       ],
@@ -202,6 +209,7 @@
     },
     "TelemetryPoint": {
       "additionalProperties": false,
+      "description": "汇总某一时刻资产的多个信号值及其源记录标识。",
       "properties": {
         "observed_at": {
           "format": "date-time",
@@ -240,6 +248,7 @@
     },
     "TimeRange": {
       "additionalProperties": false,
+      "description": "表示左闭右开语义的有效时间范围，并统一归一化为 UTC。",
       "properties": {
         "start": {
           "format": "date-time",
@@ -261,6 +270,7 @@
     }
   },
   "additionalProperties": false,
+  "description": "汇总资产遥测点、数据质量、告警和非敏感来源元数据。",
   "properties": {
     "asset_id": {
       "maxLength": 128,
@@ -302,5 +312,7 @@
   ],
   "title": "TelemetryQueryResult",
   "type": "object",
-  "$schema": "https://json-schema.org/draft/2020-12/schema"
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fault-agent:contract:1.0.0:telemetry-query-result",
+  "x-contract-version": "1.0.0"
 }

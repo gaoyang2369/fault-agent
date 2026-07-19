@@ -1,6 +1,7 @@
 {
   "$defs": {
     "RequestSource": {
+      "description": "请求进入应用服务的可信来源类型。",
       "enum": [
         "HTTP",
         "AGENT_TOOL",
@@ -10,6 +11,7 @@
       "type": "string"
     },
     "Role": {
+      "description": "系统支持的用户角色。",
       "enum": [
         "GUEST",
         "ENGINEER",
@@ -20,6 +22,7 @@
     }
   },
   "additionalProperties": false,
+  "description": "携带由认证边界确定的请求追踪信息、用户和角色。",
   "properties": {
     "request_id": {
       "minLength": 1,
@@ -59,5 +62,7 @@
   ],
   "title": "RequestContext",
   "type": "object",
-  "$schema": "https://json-schema.org/draft/2020-12/schema"
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fault-agent:contract:1.0.0:request-context",
+  "x-contract-version": "1.0.0"
 }

@@ -1,0 +1,10 @@
+{
+  "recommendation_id": "rec-1",
+  "recommendation_code": "INSPECT_COOLING_PATH",
+  "recommendation_type": "INSPECTION",
+  "priority": "MEDIUM",
+  "description": "Inspect the cooling path and record the result.",
+  "related_hypothesis_ids": ["hyp-1"],
+  "supporting_evidence_ids": ["ev-1"],
+  "evidence_status": "SUFFICIENT"
+}

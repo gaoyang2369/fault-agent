@@ -12,6 +12,8 @@ EXAMPLE_DIR = ROOT / "contracts" / "examples"
 
 EXAMPLE_SCHEMAS = {
     "telemetry-query.valid.json": "telemetry-query-command.schema.json",
+    "diagnosis-request.valid.json": "diagnosis-request.schema.json",
+    "recommendation.valid.json": "recommendation.schema.json",
     "telemetry-result.acceptable.json": "telemetry-query-result.schema.json",
     "telemetry-result.insufficient.json": "telemetry-query-result.schema.json",
     "diagnosis-result.reported-fault.json": "diagnosis-result.schema.json",
@@ -53,3 +55,31 @@ def test_public_schemas_do_not_expose_source_locator_or_query_identity() -> None
         encoding="utf-8"
     )
     assert "user_id" not in command_schema
+
+
+def test_public_schema_names_and_versions_are_consistent() -> None:
+    """验证公开模型均有规范文件名，且共享同一契约版本元数据。"""
+
+    required = {
+        "drive-system.schema.json",
+        "component.schema.json",
+        "signal-definition.schema.json",
+        "time-range.schema.json",
+        "observation.schema.json",
+        "data-quality-summary.schema.json",
+        "reported-event.schema.json",
+        "anomaly.schema.json",
+        "evidence.schema.json",
+        "claim.schema.json",
+        "hypothesis.schema.json",
+        "recommendation.schema.json",
+        "diagnosis-request.schema.json",
+        "diagnosis-result.schema.json",
+        "error-response.schema.json",
+    }
+    assert required.issubset({path.name for path in SCHEMA_DIR.glob("*.schema.json")})
+    versions = {
+        json.loads(path.read_text(encoding="utf-8"))["x-contract-version"]
+        for path in SCHEMA_DIR.glob("*.schema.json")
+    }
+    assert versions == {"1.0.0"}

@@ -1,14 +1,30 @@
 """FastAPI 应用进程入口。"""
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 
+from apps.api.composition import ApiCompositionRoot
 from apps.api.routers.health import router as health_router
+from apps.api.routers.telemetry import router as telemetry_router
+from modules.telemetry.application.service import TelemetryQueryService
 
 
-def create_app() -> FastAPI:
+def create_app(telemetry_service: TelemetryQueryService | None = None) -> FastAPI:
     """创建并装配 HTTP 应用，启动阶段不连接外部基础设施。"""
-    application = FastAPI(title="faultAgent API", version="0.1.0")
+
+    composition = ApiCompositionRoot(telemetry_service)
+
+    @asynccontextmanager
+    async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+        yield
+        composition.close()
+
+    application = FastAPI(title="faultAgent API", version="0.1.0", lifespan=lifespan)
+    application.state.composition_root = composition
     application.include_router(health_router)
+    application.include_router(telemetry_router)
     return application
 
 

@@ -1,6 +1,7 @@
 {
   "$defs": {
     "AggregationFunction": {
+      "description": "查询支持的确定性数值聚合函数。",
       "enum": [
         "MIN",
         "MAX",
@@ -11,6 +12,7 @@
     },
     "AggregationSpec": {
       "additionalProperties": false,
+      "description": "定义聚合时间窗口和需要计算的聚合函数。",
       "properties": {
         "window_seconds": {
           "exclusiveMinimum": 0,
@@ -35,6 +37,7 @@
     },
     "TimeRange": {
       "additionalProperties": false,
+      "description": "表示左闭右开语义的有效时间范围，并统一归一化为 UTC。",
       "properties": {
         "start": {
           "format": "date-time",
@@ -56,6 +59,7 @@
     }
   },
   "additionalProperties": false,
+  "description": "使用公开资产身份、时间范围和信号白名单表达遥测查询。",
   "properties": {
     "asset_id": {
       "anyOf": [
@@ -120,5 +124,7 @@
   ],
   "title": "TelemetryQueryCommand",
   "type": "object",
-  "$schema": "https://json-schema.org/draft/2020-12/schema"
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fault-agent:contract:1.0.0:telemetry-query-command",
+  "x-contract-version": "1.0.0"
 }

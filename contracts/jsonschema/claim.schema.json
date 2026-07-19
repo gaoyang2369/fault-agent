@@ -1,6 +1,7 @@
 {
   "$defs": {
     "ClaimGenerator": {
+      "description": "产生声明的主体或执行组件类别。",
       "enum": [
         "SYSTEM",
         "RULE_ENGINE",
@@ -11,6 +12,7 @@
       "type": "string"
     },
     "ClaimType": {
+      "description": "声明的重要性类别。",
       "enum": [
         "MATERIAL",
         "INFORMATIONAL"
@@ -19,6 +21,7 @@
       "type": "string"
     },
     "EvidenceStatus": {
+      "description": "声明当前证据是否充分的状态。",
       "enum": [
         "SUFFICIENT",
         "INSUFFICIENT"
@@ -28,6 +31,7 @@
     }
   },
   "additionalProperties": false,
+  "description": "表达可追溯到支持/反驳证据的结构化声明。",
   "properties": {
     "claim_id": {
       "maxLength": 128,
@@ -85,5 +89,7 @@
   ],
   "title": "Claim",
   "type": "object",
-  "$schema": "https://json-schema.org/draft/2020-12/schema"
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fault-agent:contract:1.0.0:claim",
+  "x-contract-version": "1.0.0"
 }

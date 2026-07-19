@@ -1,5 +1,7 @@
-from modules.telemetry.infrastructure.legacy_backend import LegacyRealDataBackend
 from modules.telemetry.infrastructure.real_data_models import RealDataSourceLocator
-from modules.telemetry.infrastructure.real_data_repository import RealDataRepository
+from modules.telemetry.infrastructure.real_data_repository import (
+    DataQualitySettings,
+    RealDataRepository,
+)
 
-__all__ = ["LegacyRealDataBackend", "RealDataRepository", "RealDataSourceLocator"]
+__all__ = ["DataQualitySettings", "RealDataRepository", "RealDataSourceLocator"]

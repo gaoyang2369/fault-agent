@@ -1,6 +1,7 @@
 {
   "$defs": {
     "ConfirmationMethod": {
+      "description": "工程师确认故障时采用的方法。",
       "enum": [
         "INSPECTION",
         "REPAIR_RESULT",
@@ -11,6 +12,7 @@
     }
   },
   "additionalProperties": false,
+  "description": "表示由已认证人员通过明确方法确认的故障事实。",
   "properties": {
     "confirmed_fault_id": {
       "minLength": 1,
@@ -58,5 +60,7 @@
   ],
   "title": "ConfirmedFault",
   "type": "object",
-  "$schema": "https://json-schema.org/draft/2020-12/schema"
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fault-agent:contract:1.0.0:confirmed-fault",
+  "x-contract-version": "1.0.0"
 }

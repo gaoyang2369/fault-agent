@@ -1,0 +1,85 @@
+{
+  "$defs": {
+    "SignalQuality": {
+      "description": "单个信号值的数据质量等级。",
+      "enum": [
+        "GOOD",
+        "DEGRADED",
+        "BAD",
+        "MISSING"
+      ],
+      "title": "SignalQuality",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "一条可追溯到源记录的信号观测，与诊断解释严格区分。",
+  "properties": {
+    "source_record_id": {
+      "minLength": 1,
+      "title": "Source Record Id",
+      "type": "string"
+    },
+    "asset_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Asset Id",
+      "type": "string"
+    },
+    "observed_at": {
+      "format": "date-time",
+      "title": "Observed At",
+      "type": "string"
+    },
+    "signal_code": {
+      "minLength": 1,
+      "title": "Signal Code",
+      "type": "string"
+    },
+    "value": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Value"
+    },
+    "unit": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Unit"
+    },
+    "quality": {
+      "$ref": "#/$defs/SignalQuality"
+    }
+  },
+  "required": [
+    "source_record_id",
+    "asset_id",
+    "observed_at",
+    "signal_code",
+    "value",
+    "unit",
+    "quality"
+  ],
+  "title": "Observation",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fault-agent:contract:1.0.0:observation",
+  "x-contract-version": "1.0.0"
+}

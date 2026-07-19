@@ -1,6 +1,7 @@
 {
   "$defs": {
     "AnomalySeverity": {
+      "description": "确定性异常的严重程度枚举。",
       "enum": [
         "INFO",
         "LOW",
@@ -13,6 +14,7 @@
     },
     "TimeRange": {
       "additionalProperties": false,
+      "description": "表示左闭右开语义的有效时间范围，并统一归一化为 UTC。",
       "properties": {
         "start": {
           "format": "date-time",
@@ -34,6 +36,7 @@
     }
   },
   "additionalProperties": false,
+  "description": "描述由指定版本规则识别、且有证据支撑的运行异常。",
   "properties": {
     "anomaly_id": {
       "minLength": 1,
@@ -77,5 +80,7 @@
   ],
   "title": "Anomaly",
   "type": "object",
-  "$schema": "https://json-schema.org/draft/2020-12/schema"
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fault-agent:contract:1.0.0:anomaly",
+  "x-contract-version": "1.0.0"
 }

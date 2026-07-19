@@ -1,6 +1,7 @@
 {
   "$defs": {
     "ComponentType": {
+      "description": "驱动系统内可独立识别的组件类型枚举。",
       "enum": [
         "INVERTER",
         "MOTOR"
@@ -9,6 +10,7 @@
       "type": "string"
     },
     "SignalDataType": {
+      "description": "信号在领域契约中的数据类型枚举。",
       "enum": [
         "FLOAT",
         "INTEGER",
@@ -20,6 +22,7 @@
     }
   },
   "additionalProperties": false,
+  "description": "定义资产信号的类型、单位、采样周期和诊断启用状态。",
   "properties": {
     "signal_code": {
       "minLength": 1,
@@ -76,5 +79,7 @@
   ],
   "title": "SignalDefinition",
   "type": "object",
-  "$schema": "https://json-schema.org/draft/2020-12/schema"
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fault-agent:contract:1.0.0:signal-definition",
+  "x-contract-version": "1.0.0"
 }

@@ -9,8 +9,12 @@ from modules.asset.domain.models import ComponentType, SignalDataType, SignalDef
 from modules.diagnosis.domain.models import (
     ConfirmationMethod,
     ConfirmedFault,
+    DiagnosisRequest,
     Hypothesis,
     HypothesisTarget,
+    Recommendation,
+    RecommendationPriority,
+    RecommendationType,
 )
 from modules.evidence.domain.models import (
     Claim,
@@ -133,6 +137,56 @@ def test_hypothesis_accepts_multiple_supporting_and_contradicting_evidence() -> 
     )
     assert len(hypothesis.supporting_evidence_ids) == 2
     assert len(hypothesis.contradicting_evidence_ids) == 2
+
+
+def test_hypothesis_requires_evidence_or_explicit_insufficient_status() -> None:
+    """验证无支持证据的假设只能以证据不足状态公开。"""
+
+    base = {
+        "hypothesis_id": "hyp-1",
+        "hypothesis_code": "MORE_DATA_REQUIRED",
+        "target_component": HypothesisTarget.UNKNOWN,
+    }
+    with pytest.raises(ValidationError, match="requires supporting evidence"):
+        Hypothesis.model_validate(base)
+    hypothesis = Hypothesis.model_validate({**base, "evidence_status": EvidenceStatus.INSUFFICIENT})
+    assert hypothesis.evidence_status is EvidenceStatus.INSUFFICIENT
+
+
+def test_diagnosis_request_uses_one_public_asset_identity_and_rejects_private_fields() -> None:
+    """验证诊断请求明确区分资产身份，且不接受认证或源定位字段。"""
+
+    payload = {
+        "asset_code": "G120-1",
+        "time_range": {
+            "start": "2026-01-14T06:00:00Z",
+            "end": "2026-01-14T07:00:00Z",
+        },
+        "diagnosis_profile": "G120_DRIVE_BASIC",
+        "include_report": False,
+    }
+    DiagnosisRequest.model_validate(payload)
+    with pytest.raises(ValidationError, match="exactly one"):
+        DiagnosisRequest.model_validate({**payload, "asset_id": "asset-g120-1"})
+    with pytest.raises(ValidationError):
+        DiagnosisRequest.model_validate({**payload, "user_id": "attacker"})
+
+
+def test_recommendation_is_evidence_bound_and_has_no_execution_contract() -> None:
+    """验证建议可追溯且仅表达后续检查，不携带设备控制字段。"""
+
+    recommendation = Recommendation(
+        recommendation_id="rec-1",
+        recommendation_code="INSPECT_COOLING_PATH",
+        recommendation_type=RecommendationType.INSPECTION,
+        priority=RecommendationPriority.MEDIUM,
+        description="Inspect the cooling path and record the result.",
+        related_hypothesis_ids=("hyp-1",),
+        supporting_evidence_ids=("ev-1",),
+    )
+    assert recommendation.supporting_evidence_ids == ("ev-1",)
+    with pytest.raises(ValidationError):
+        Recommendation.model_validate({**recommendation.model_dump(), "execute": True})
 
 
 def test_data_quality_gates_trend_and_duration_analyses() -> None:

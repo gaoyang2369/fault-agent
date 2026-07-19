@@ -1,0 +1,25 @@
+{
+  "additionalProperties": false,
+  "description": "表示左闭右开语义的有效时间范围，并统一归一化为 UTC。",
+  "properties": {
+    "start": {
+      "format": "date-time",
+      "title": "Start",
+      "type": "string"
+    },
+    "end": {
+      "format": "date-time",
+      "title": "End",
+      "type": "string"
+    }
+  },
+  "required": [
+    "start",
+    "end"
+  ],
+  "title": "TimeRange",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fault-agent:contract:1.0.0:time-range",
+  "x-contract-version": "1.0.0"
+}

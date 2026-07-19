@@ -1,6 +1,7 @@
 {
   "$defs": {
     "EventSource": {
+      "description": "上报事件的数据来源类别。",
       "enum": [
         "DEVICE_REPORTED"
       ],
@@ -8,6 +9,7 @@
       "type": "string"
     },
     "EventType": {
+      "description": "设备上报事件类别。",
       "enum": [
         "FAULT",
         "ALARM",
@@ -18,6 +20,7 @@
     }
   },
   "additionalProperties": false,
+  "description": "记录设备上报的故障、告警或状态变化事实，不代表根因确认。",
   "properties": {
     "event_type": {
       "$ref": "#/$defs/EventType"
@@ -55,5 +58,7 @@
   ],
   "title": "ReportedEvent",
   "type": "object",
-  "$schema": "https://json-schema.org/draft/2020-12/schema"
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fault-agent:contract:1.0.0:reported-event",
+  "x-contract-version": "1.0.0"
 }

@@ -8,6 +8,9 @@
     {"hypothesis_id": "hyp-1", "hypothesis_code": "COOLING_CHECK_REQUIRED", "target_component": "INVERTER", "score": null, "supporting_evidence_ids": ["ev-1"], "contradicting_evidence_ids": ["ev-2"], "unverified_conditions": ["inspect cooling path"]},
     {"hypothesis_id": "hyp-2", "hypothesis_code": "LOAD_CHECK_REQUIRED", "target_component": "DRIVE_SYSTEM", "score": null, "supporting_evidence_ids": ["ev-1"], "contradicting_evidence_ids": [], "unverified_conditions": ["verify load"]}
   ],
+  "recommendations": [
+    {"recommendation_id": "rec-1", "recommendation_code": "INSPECT_COOLING_PATH", "recommendation_type": "INSPECTION", "priority": "MEDIUM", "description": "Inspect the cooling path and record the result.", "related_hypothesis_ids": ["hyp-1"], "supporting_evidence_ids": ["ev-1"], "evidence_status": "SUFFICIENT"}
+  ],
   "confirmed_fault": null, "evidence_ids": ["ev-1", "ev-2"],
   "versions": {"rule_version": "fixture:0.1.0", "knowledge_version": "none", "model_version": "none"}
 }

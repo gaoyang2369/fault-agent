@@ -2,6 +2,7 @@
   "$defs": {
     "DataQualityPayload": {
       "additionalProperties": false,
+      "description": "描述数据质量状态、完整率和告警代码的证据载荷。",
       "properties": {
         "kind": {
           "const": "DATA_QUALITY",
@@ -37,6 +38,7 @@
     },
     "DocumentChunkPayload": {
       "additionalProperties": false,
+      "description": "描述知识文档版本、片段位置和摘录的证据载荷。",
       "properties": {
         "kind": {
           "const": "DOCUMENT_CHUNK",
@@ -75,6 +77,7 @@
       "type": "object"
     },
     "EvidenceType": {
+      "description": "证据内容的来源与结构类别。",
       "enum": [
         "TELEMETRY_SLICE",
         "DATA_QUALITY",
@@ -90,6 +93,7 @@
     },
     "ModelInferencePayload": {
       "additionalProperties": false,
+      "description": "描述模型版本、输出代码及输入证据集合的推理证据载荷。",
       "properties": {
         "kind": {
           "const": "MODEL_INFERENCE",
@@ -128,6 +132,7 @@
     },
     "ReportedCodePayload": {
       "additionalProperties": false,
+      "description": "保留设备上报故障/告警原始码、规范码和源记录的证据载荷。",
       "properties": {
         "kind": {
           "enum": [
@@ -173,6 +178,7 @@
     },
     "RuleHitPayload": {
       "additionalProperties": false,
+      "description": "描述确定性规则命中及其规则版本和观测摘要的证据载荷。",
       "properties": {
         "kind": {
           "const": "RULE_HIT",
@@ -206,6 +212,7 @@
     },
     "TelemetrySlicePayload": {
       "additionalProperties": false,
+      "description": "描述一段遥测信号及其源记录范围的证据载荷。",
       "properties": {
         "kind": {
           "const": "TELEMETRY_SLICE",
@@ -244,6 +251,7 @@
     },
     "TimeRange": {
       "additionalProperties": false,
+      "description": "表示左闭右开语义的有效时间范围，并统一归一化为 UTC。",
       "properties": {
         "start": {
           "format": "date-time",
@@ -265,6 +273,7 @@
     },
     "UserObservationPayload": {
       "additionalProperties": false,
+      "description": "描述由已知人员记录的现场观测事实证据。",
       "properties": {
         "kind": {
           "const": "USER_OBSERVATION",
@@ -298,6 +307,7 @@
     }
   },
   "additionalProperties": false,
+  "description": "保存可校验内容哈希、来源引用和结构化载荷的不可变证据快照。",
   "properties": {
     "evidence_id": {
       "maxLength": 128,
@@ -397,5 +407,7 @@
   ],
   "title": "Evidence",
   "type": "object",
-  "$schema": "https://json-schema.org/draft/2020-12/schema"
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fault-agent:contract:1.0.0:evidence",
+  "x-contract-version": "1.0.0"
 }

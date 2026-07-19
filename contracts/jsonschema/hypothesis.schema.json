@@ -1,6 +1,16 @@
 {
   "$defs": {
+    "EvidenceStatus": {
+      "description": "声明当前证据是否充分的状态。",
+      "enum": [
+        "SUFFICIENT",
+        "INSUFFICIENT"
+      ],
+      "title": "EvidenceStatus",
+      "type": "string"
+    },
     "HypothesisTarget": {
+      "description": "故障假设可能指向的组件范围。",
       "enum": [
         "INVERTER",
         "MOTOR",
@@ -12,6 +22,7 @@
     }
   },
   "additionalProperties": false,
+  "description": "表达尚未确认的故障解释及其支持、反驳证据和待验证条件。",
   "properties": {
     "hypothesis_id": {
       "minLength": 1,
@@ -67,6 +78,10 @@
       },
       "title": "Unverified Conditions",
       "type": "array"
+    },
+    "evidence_status": {
+      "$ref": "#/$defs/EvidenceStatus",
+      "default": "SUFFICIENT"
     }
   },
   "required": [
@@ -76,5 +91,7 @@
   ],
   "title": "Hypothesis",
   "type": "object",
-  "$schema": "https://json-schema.org/draft/2020-12/schema"
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fault-agent:contract:1.0.0:hypothesis",
+  "x-contract-version": "1.0.0"
 }

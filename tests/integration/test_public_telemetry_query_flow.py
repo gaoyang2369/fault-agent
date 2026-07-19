@@ -7,10 +7,11 @@ from modules.asset.application.service import AssetSourceResolver
 from modules.asset.infrastructure.in_memory_repository import InMemoryAssetRepository
 from modules.telemetry.application.commands import TelemetryQueryCommand
 from modules.telemetry.application.service import TelemetryQueryService
-from modules.telemetry.infrastructure.legacy_backend import LegacyRealDataBackend
-from modules.telemetry.models import DataQualitySettings
-from modules.telemetry.repository import RealDataRepository, Row
-from modules.telemetry.service import TelemetryQueryService as LegacyTelemetryQueryService
+from modules.telemetry.infrastructure.real_data_repository import (
+    DataQualitySettings,
+    RealDataRepository,
+    Row,
+)
 from shared.context import RequestContext, RequestSource, Role
 
 
@@ -36,10 +37,10 @@ def test_public_flow_uses_asset_and_does_not_return_locator_fields() -> None:
     """验证公开流程按资产查询，且结果不泄露源表定位字段。"""
 
     assets = InMemoryAssetRepository.g120_fixture()
-    legacy = LegacyTelemetryQueryService(
-        RealDataRepository(
-            FixtureExecutor(), source_timezone="UTC", create_time_filter_buffer_seconds=60
-        ),
+    repository = RealDataRepository(
+        FixtureExecutor(),
+        source_timezone="UTC",
+        create_time_filter_buffer_seconds=60,
         quality_settings=DataQualitySettings(
             nominal_interval_seconds=3,
             gap_warning_seconds=9,
@@ -47,7 +48,7 @@ def test_public_flow_uses_asset_and_does_not_return_locator_fields() -> None:
             insufficient_completeness=0.8,
         ),
     )
-    service = TelemetryQueryService(AssetSourceResolver(assets), LegacyRealDataBackend(legacy))
+    service = TelemetryQueryService(AssetSourceResolver(assets), repository)
 
     result = asyncio.run(
         service.query(

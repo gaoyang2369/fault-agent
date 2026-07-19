@@ -1,6 +1,7 @@
 {
   "$defs": {
     "AllowedAnalysis": {
+      "description": "在当前数据质量下允许执行的分析类别。",
       "enum": [
         "POINT_SUMMARY",
         "REPORTED_EVENT_DETECTION",
@@ -12,6 +13,7 @@
     },
     "Anomaly": {
       "additionalProperties": false,
+      "description": "描述由指定版本规则识别、且有证据支撑的运行异常。",
       "properties": {
         "anomaly_id": {
           "minLength": 1,
@@ -57,6 +59,7 @@
       "type": "object"
     },
     "AnomalySeverity": {
+      "description": "确定性异常的严重程度枚举。",
       "enum": [
         "INFO",
         "LOW",
@@ -68,6 +71,7 @@
       "type": "string"
     },
     "ConfirmationMethod": {
+      "description": "工程师确认故障时采用的方法。",
       "enum": [
         "INSPECTION",
         "REPAIR_RESULT",
@@ -78,6 +82,7 @@
     },
     "ConfirmedFault": {
       "additionalProperties": false,
+      "description": "表示由已认证人员通过明确方法确认的故障事实。",
       "properties": {
         "confirmed_fault_id": {
           "minLength": 1,
@@ -127,6 +132,7 @@
       "type": "object"
     },
     "DataQualityStatus": {
+      "description": "查询数据整体质量状态。",
       "enum": [
         "ACCEPTABLE",
         "DEGRADED",
@@ -137,6 +143,7 @@
     },
     "DataQualitySummary": {
       "additionalProperties": false,
+      "description": "汇总完整率、时间解析、重复与间隔质量，并声明允许的分析。",
       "properties": {
         "status": {
           "$ref": "#/$defs/DataQualityStatus"
@@ -221,6 +228,7 @@
       "type": "object"
     },
     "DiagnosisStatus": {
+      "description": "一次诊断运行的业务结果状态。",
       "enum": [
         "NO_DATA",
         "INSUFFICIENT_DATA",
@@ -237,6 +245,7 @@
     },
     "DiagnosisVersions": {
       "additionalProperties": false,
+      "description": "记录诊断运行使用的规则、知识和模型版本。",
       "properties": {
         "rule_version": {
           "minLength": 1,
@@ -263,6 +272,7 @@
       "type": "object"
     },
     "EventSource": {
+      "description": "上报事件的数据来源类别。",
       "enum": [
         "DEVICE_REPORTED"
       ],
@@ -270,6 +280,7 @@
       "type": "string"
     },
     "EventType": {
+      "description": "设备上报事件类别。",
       "enum": [
         "FAULT",
         "ALARM",
@@ -278,8 +289,18 @@
       "title": "EventType",
       "type": "string"
     },
+    "EvidenceStatus": {
+      "description": "声明当前证据是否充分的状态。",
+      "enum": [
+        "SUFFICIENT",
+        "INSUFFICIENT"
+      ],
+      "title": "EvidenceStatus",
+      "type": "string"
+    },
     "Hypothesis": {
       "additionalProperties": false,
+      "description": "表达尚未确认的故障解释及其支持、反驳证据和待验证条件。",
       "properties": {
         "hypothesis_id": {
           "minLength": 1,
@@ -335,6 +356,10 @@
           },
           "title": "Unverified Conditions",
           "type": "array"
+        },
+        "evidence_status": {
+          "$ref": "#/$defs/EvidenceStatus",
+          "default": "SUFFICIENT"
         }
       },
       "required": [
@@ -346,6 +371,7 @@
       "type": "object"
     },
     "HypothesisTarget": {
+      "description": "故障假设可能指向的组件范围。",
       "enum": [
         "INVERTER",
         "MOTOR",
@@ -355,8 +381,87 @@
       "title": "HypothesisTarget",
       "type": "string"
     },
+    "Recommendation": {
+      "additionalProperties": false,
+      "description": "表示尚未执行的检查或信息收集建议，不包含设备控制动作。",
+      "properties": {
+        "recommendation_id": {
+          "minLength": 1,
+          "title": "Recommendation Id",
+          "type": "string"
+        },
+        "recommendation_code": {
+          "minLength": 1,
+          "title": "Recommendation Code",
+          "type": "string"
+        },
+        "recommendation_type": {
+          "$ref": "#/$defs/RecommendationType"
+        },
+        "priority": {
+          "$ref": "#/$defs/RecommendationPriority"
+        },
+        "description": {
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "related_hypothesis_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Related Hypothesis Ids",
+          "type": "array"
+        },
+        "supporting_evidence_ids": {
+          "default": [],
+          "items": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Supporting Evidence Ids",
+          "type": "array"
+        },
+        "evidence_status": {
+          "$ref": "#/$defs/EvidenceStatus",
+          "default": "SUFFICIENT"
+        }
+      },
+      "required": [
+        "recommendation_id",
+        "recommendation_code",
+        "recommendation_type",
+        "priority",
+        "description"
+      ],
+      "title": "Recommendation",
+      "type": "object"
+    },
+    "RecommendationPriority": {
+      "description": "用于排序建议的业务优先级，不代表工业安全等级。",
+      "enum": [
+        "LOW",
+        "MEDIUM",
+        "HIGH"
+      ],
+      "title": "RecommendationPriority",
+      "type": "string"
+    },
+    "RecommendationType": {
+      "description": "只读诊断可给出的非控制类后续建议。",
+      "enum": [
+        "INSPECTION",
+        "DATA_COLLECTION",
+        "KNOWLEDGE_REVIEW"
+      ],
+      "title": "RecommendationType",
+      "type": "string"
+    },
     "ReportedEvent": {
       "additionalProperties": false,
+      "description": "记录设备上报的故障、告警或状态变化事实，不代表根因确认。",
       "properties": {
         "event_type": {
           "$ref": "#/$defs/EventType"
@@ -397,6 +502,7 @@
     },
     "TimeRange": {
       "additionalProperties": false,
+      "description": "表示左闭右开语义的有效时间范围，并统一归一化为 UTC。",
       "properties": {
         "start": {
           "format": "date-time",
@@ -418,6 +524,7 @@
     }
   },
   "additionalProperties": false,
+  "description": "汇总数据质量、事件、异常、假设、证据及可选人工确认结果。",
   "properties": {
     "diagnosis_id": {
       "maxLength": 128,
@@ -464,6 +571,14 @@
       "title": "Hypotheses",
       "type": "array"
     },
+    "recommendations": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Recommendation"
+      },
+      "title": "Recommendations",
+      "type": "array"
+    },
     "confirmed_fault": {
       "anyOf": [
         {
@@ -499,5 +614,7 @@
   ],
   "title": "DiagnosisResult",
   "type": "object",
-  "$schema": "https://json-schema.org/draft/2020-12/schema"
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fault-agent:contract:1.0.0:diagnosis-result",
+  "x-contract-version": "1.0.0"
 }

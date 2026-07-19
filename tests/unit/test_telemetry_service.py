@@ -1,105 +1,123 @@
-"""应用层遥测行为的单元测试。"""
+"""公开应用服务与正式 ``real_data`` 适配器的单元测试。"""
 
+import asyncio
 from collections.abc import Sequence
 from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
 
-from modules.telemetry.models import (
+from modules.asset.application.service import AssetSourceResolver
+from modules.asset.infrastructure.in_memory_repository import InMemoryAssetRepository
+from modules.telemetry.application.commands import (
     AggregationFunction,
     AggregationSpec,
-    DataQualitySettings,
-    RequestContext,
-    TelemetryQuery,
+    TelemetryQueryCommand,
 )
-from modules.telemetry.repository import RealDataRepository, Row
-from modules.telemetry.service import TelemetryQueryService
+from modules.telemetry.application.ports import TelemetryAuthorizationPolicy
+from modules.telemetry.application.service import TelemetryQueryService
+from modules.telemetry.infrastructure.real_data_repository import (
+    DataQualitySettings,
+    RealDataRepository,
+    Row,
+)
+from shared.context import RequestContext, RequestSource, Role
 
 
 class FixtureExecutor:
-    """为遥测服务单元测试返回预设源记录。"""
+    """为正式适配器返回预设源记录。"""
 
     def __init__(self, rows: list[Row]) -> None:
-        """保存测试查询应返回的源记录。"""
-
         self.rows = rows
 
     def fetch_all(self, sql: str, parameters: Sequence[object]) -> list[Row]:
-        """忽略固定 SQL 细节并返回预设记录。"""
-
+        del sql, parameters
         return self.rows
 
 
-def query(**overrides: object) -> TelemetryQuery:
-    """构造有效旧版查询，并允许测试覆盖指定字段。"""
+def command(**overrides: object) -> TelemetryQueryCommand:
+    """构造有效公开命令，并允许测试覆盖字段。"""
 
     values: dict[str, object] = {
-        "device_name": "D",
-        "start": datetime(2026, 7, 16, tzinfo=UTC),
-        "end": datetime(2026, 7, 16, 1, tzinfo=UTC),
-        "signals": ("speed_actual",),
+        "asset_code": "G120-1",
+        "time_range": {
+            "start": datetime(2026, 7, 16, tzinfo=UTC),
+            "end": datetime(2026, 7, 16, 1, tzinfo=UTC),
+        },
+        "signal_codes": ("speed_actual",),
     }
     values.update(overrides)
-    return TelemetryQuery.model_validate(values)
+    return TelemetryQueryCommand.model_validate(values)
 
 
 def context() -> RequestContext:
-    """构造代表已认证工程师的旧版可信请求上下文。"""
+    """构造由可信边界提供的工程师上下文。"""
 
     return RequestContext(
         request_id="request-1",
         trace_id="trace-1",
         user_id="authenticated-user",
-        roles=("ENGINEER",),
+        roles=frozenset({Role.ENGINEER}),
+        request_source=RequestSource.HTTP,
     )
 
 
-def quality_settings() -> DataQualitySettings:
-    """构造仅用于测试的显式数据质量参数。"""
+def quality_settings(**overrides: float) -> DataQualitySettings:
+    values = {
+        "nominal_interval_seconds": 3.0,
+        "gap_warning_seconds": 9.0,
+        "acceptable_completeness": 0.95,
+        "insufficient_completeness": 0.8,
+    }
+    values.update(overrides)
+    return DataQualitySettings.model_validate(values)
 
-    return DataQualitySettings(
-        nominal_interval_seconds=3,
-        gap_warning_seconds=9,
-        acceptable_completeness=0.95,
-        insufficient_completeness=0.80,
-    )
 
-
-def repository(rows: list[Row]) -> RealDataRepository:
-    """使用 UTC 源时区和预设记录构造只读仓储。"""
-
-    return RealDataRepository(
+def service(
+    rows: list[Row],
+    *,
+    settings: DataQualitySettings | None = None,
+    max_return_points: int = 10_000,
+    policy: TelemetryAuthorizationPolicy | None = None,
+) -> TelemetryQueryService:
+    repository = RealDataRepository(
         FixtureExecutor(rows),
         source_timezone="UTC",
         create_time_filter_buffer_seconds=60,
+        quality_settings=settings or quality_settings(),
+        max_return_points=max_return_points,
+    )
+    return TelemetryQueryService(
+        AssetSourceResolver(InMemoryAssetRepository.g120_fixture()),
+        repository,
+        policy=policy,
     )
 
 
 def test_query_contract_rejects_naive_time_and_unknown_fields() -> None:
-    """验证旧版查询拒绝无时区时间和未知字段。"""
+    """验证公开命令拒绝无时区时间、源定位、身份和原始 SQL。"""
 
     with pytest.raises(ValidationError):
-        query(start=datetime(2026, 7, 16))
-    with pytest.raises(ValidationError):
-        query(raw_sql="SELECT * FROM real_data")
-    with pytest.raises(ValidationError):
-        query(user_id="payload-user", roles=("ADMIN",))
+        command(time_range={"start": datetime(2026, 7, 16), "end": datetime(2026, 7, 17)})
+    for forbidden in (
+        {"raw_sql": "SELECT * FROM real_data"},
+        {"user_id": "payload-user"},
+        {"device_name": "D"},
+    ):
+        with pytest.raises(ValidationError):
+            command(**forbidden)
 
 
 def test_policy_is_application_layer_and_can_rewrite_request() -> None:
-    """验证授权位于应用层，且策略可以确定性收紧查询。"""
+    """验证授权位于应用层，且策略可确定性收紧命令。"""
 
-    requested: list[TelemetryQuery] = []
+    requested: list[TelemetryQueryCommand] = []
 
     class GuestPolicy:
-        """把测试查询返回点数限制为一的访客策略。"""
-
         def authorize(
-            self, command: TelemetryQuery, request_context: RequestContext
-        ) -> TelemetryQuery:
-            """校验可信用户后复制并收紧查询命令。"""
-
+            self, command: TelemetryQueryCommand, asset: object, request_context: RequestContext
+        ) -> TelemetryQueryCommand:
+            del asset
             assert request_context.user_id == "authenticated-user"
             requested.append(command)
             return command.model_copy(
@@ -110,75 +128,50 @@ def test_policy_is_application_layer_and_can_rewrite_request() -> None:
                 }
             )
 
-    service = TelemetryQueryService(
-        repository([]), quality_settings=quality_settings(), policy=GuestPolicy()
-    )
-
-    service.query(query(), context())
-
+    asyncio.run(service([], policy=GuestPolicy()).query(command(), context()))
     assert requested
 
 
 def test_service_limits_points_and_returns_invalid_value_warning() -> None:
-    """验证服务限制返回点数并报告非法数值告警。"""
-
-    rows = [
-        {"id": 1, "timestamp": "2026-07-16T00:00:00Z", "device_name": "D", "speed_actual": "bad"},
-        {"id": 2, "timestamp": "2026-07-16T00:00:03Z", "device_name": "D", "speed_actual": 2},
+    rows: list[Row] = [
+        {"id": 1, "timestamp": "2026-07-16T00:00:00Z", "speed_actual": "bad"},
+        {"id": 2, "timestamp": "2026-07-16T00:00:03Z", "speed_actual": 2},
     ]
-    service = TelemetryQueryService(
-        repository(rows), quality_settings=quality_settings(), max_return_points=1
-    )
-
-    result = service.query(query(max_points=2), context())
+    result = asyncio.run(service(rows, max_return_points=1).query(command(max_points=2), context()))
 
     assert len(result.points) == 1
-    assert result.truncated is True
-    assert {warning.code for warning in result.warnings} == {
-        "INVALID_SIGNAL_VALUE",
-        "MAX_POINTS_EXCEEDED",
-    }
+    assert result.source_metadata.truncated is True
+    assert set(result.warnings) == {"INVALID_SIGNAL_VALUE", "MAX_POINTS_EXCEEDED"}
 
 
 def test_aggregation_rejects_reported_event_fields() -> None:
-    """验证数值聚合拒绝 fault_code 等设备上报事件字段。"""
-
-    service = TelemetryQueryService(repository([]), quality_settings=quality_settings())
-    request = query(
-        signals=("fault_code",),
+    request = command(
+        signal_codes=("fault_code",),
         aggregation=AggregationSpec(window_seconds=60, functions=(AggregationFunction.MAX,)),
     )
     with pytest.raises(ValueError, match="only supports numeric"):
-        service.query(request, context())
+        asyncio.run(service([]).query(request, context()))
 
 
 def test_data_quality_summary_uses_configured_thresholds_and_gaps() -> None:
-    """验证数据质量汇总仅使用显式参数判定完整率和间隔。"""
-
-    rows = [
-        {
-            "id": 1,
-            "timestamp": "2026-07-16T00:00:00Z",
-            "device_name": "D",
-            "speed_actual": 1,
-        },
-        {
-            "id": 2,
-            "timestamp": "2026-07-16T00:00:12Z",
-            "device_name": "D",
-            "speed_actual": 2,
-        },
-        {"id": 3, "timestamp": "bad", "device_name": "D", "speed_actual": 3},
+    rows: list[Row] = [
+        {"id": 1, "timestamp": "2026-07-16T00:00:00Z", "speed_actual": 1},
+        {"id": 2, "timestamp": "2026-07-16T00:00:12Z", "speed_actual": 2},
+        {"id": 3, "timestamp": "bad", "speed_actual": 3},
     ]
-    settings = DataQualitySettings(
+    settings = quality_settings(
         nominal_interval_seconds=6,
         gap_warning_seconds=10,
         acceptable_completeness=0.9,
         insufficient_completeness=0.4,
     )
-    service = TelemetryQueryService(repository(rows), quality_settings=settings)
-
-    result = service.query(query(end=datetime(2026, 7, 16, 0, 0, 24, tzinfo=UTC)), context())
+    request = command(
+        time_range={
+            "start": datetime(2026, 7, 16, tzinfo=UTC),
+            "end": datetime(2026, 7, 16, 0, 0, 24, tzinfo=UTC),
+        }
+    )
+    result = asyncio.run(service(rows, settings=settings).query(request, context()))
 
     assert result.data_quality.status == "DEGRADED"
     assert result.data_quality.expected_points == 4
@@ -189,7 +182,7 @@ def test_data_quality_summary_uses_configured_thresholds_and_gaps() -> None:
     assert result.data_quality.gap_count == 1
     assert result.data_quality.maximum_gap_seconds == 12
     assert result.data_quality.allowed_analyses == (
-        "POINT",
-        "REPORTED_EVENT",
-        "TREND",
+        "POINT_SUMMARY",
+        "REPORTED_EVENT_DETECTION",
+        "TREND_ANALYSIS",
     )

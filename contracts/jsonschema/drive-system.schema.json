@@ -136,7 +136,6 @@
   "title": "DriveSystem",
   "type": "object",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:fault-agent:contract:1.0.0:asset",
-  "x-contract-version": "1.0.0",
-  "x-deprecated-alias-of": "drive-system.schema.json"
+  "$id": "urn:fault-agent:contract:1.0.0:drive-system",
+  "x-contract-version": "1.0.0"
 }

@@ -6,7 +6,20 @@ from typing import Any
 
 import pytest
 
-from modules.telemetry.repository import RealDataRepository, Row
+from modules.asset.infrastructure.models import RealDataSourceLocator
+from modules.telemetry.infrastructure.real_data_repository import (
+    DataQualitySettings,
+    RealDataRepository,
+    Row,
+)
+
+QUALITY_SETTINGS = DataQualitySettings(
+    nominal_interval_seconds=3,
+    gap_warning_seconds=9,
+    acceptable_completeness=0.95,
+    insufficient_completeness=0.8,
+)
+LOCATOR = RealDataSourceLocator(device_name="D", inverter_name="I")
 
 
 class RecordingExecutor:
@@ -35,11 +48,13 @@ def test_repository_uses_fixed_parameterized_read_only_query() -> None:
         executor,
         source_timezone="Asia/Shanghai",
         create_time_filter_buffer_seconds=60,
+        quality_settings=QUALITY_SETTINGS,
     )
 
-    repository.query(
-        device_name="motor'; DELETE FROM real_data",
-        inverter_name="INV-1",
+    repository.read(
+        source_locator=RealDataSourceLocator(
+            device_name="motor'; DELETE FROM real_data", inverter_name="INV-1"
+        ),
         start=datetime(2026, 7, 16, tzinfo=UTC),
         end=datetime(2026, 7, 17, tzinfo=UTC),
         signals=("speed_actual",),
@@ -61,16 +76,17 @@ def test_repository_requires_timezone_and_rejects_unknown_signal() -> None:
             RecordingExecutor([]),
             source_timezone="",
             create_time_filter_buffer_seconds=0,
+            quality_settings=QUALITY_SETTINGS,
         )
     repository = RealDataRepository(
         RecordingExecutor([]),
         source_timezone="UTC",
         create_time_filter_buffer_seconds=0,
+        quality_settings=QUALITY_SETTINGS,
     )
     with pytest.raises(ValueError, match="unsupported signals"):
-        repository.query(
-            device_name="D",
-            inverter_name=None,
+        repository.read(
+            source_locator=LOCATOR,
             start=datetime(2026, 1, 1, tzinfo=UTC),
             end=datetime(2026, 1, 2, tzinfo=UTC),
             signals=("password",),
@@ -105,11 +121,11 @@ def test_repository_normalizes_timezone_fallback_and_reports_quality() -> None:
         RecordingExecutor(rows),
         source_timezone="Asia/Shanghai",
         create_time_filter_buffer_seconds=60,
+        quality_settings=QUALITY_SETTINGS,
     )
 
-    result = repository.query(
-        device_name="D",
-        inverter_name="I",
+    result = repository.read(
+        source_locator=LOCATOR,
         start=datetime(2026, 7, 16, tzinfo=UTC),
         end=datetime(2026, 7, 17, tzinfo=UTC),
         signals=("speed_actual",),
@@ -138,11 +154,11 @@ def test_repository_reports_scan_truncation_and_duplicates() -> None:
         RecordingExecutor([{**row, "id": 1}, {**row, "id": 2}, {**row, "id": 3}]),
         source_timezone="UTC",
         create_time_filter_buffer_seconds=0,
+        quality_settings=QUALITY_SETTINGS,
         max_scan_rows=2,
     )
-    result = repository.query(
-        device_name="D",
-        inverter_name="I",
+    result = repository.read(
+        source_locator=LOCATOR,
         start=datetime(2026, 7, 15, tzinfo=UTC),
         end=datetime(2026, 7, 17, tzinfo=UTC),
         signals=("speed_actual",),
@@ -208,12 +224,12 @@ def test_recent_window_is_filtered_in_sql_before_scan_limit() -> None:
         executor,
         source_timezone="UTC",
         create_time_filter_buffer_seconds=60,
+        quality_settings=QUALITY_SETTINGS,
         max_scan_rows=2,
     )
 
-    result = repository.query(
-        device_name="D",
-        inverter_name="I",
+    result = repository.read(
+        source_locator=LOCATOR,
         start=datetime(2026, 7, 16, tzinfo=UTC),
         end=datetime(2026, 7, 16, 0, 1, tzinfo=UTC),
         signals=("speed_actual",),
