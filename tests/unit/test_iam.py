@@ -165,13 +165,21 @@ def test_agent_tool_reauthorizes_every_invocation() -> None:
     """验证同一 Tool 对象不会缓存上一次调用的高权限上下文。"""
 
     class Backend:
+        """用于确认授权通过后才会抵达查询后端的测试替身。"""
+
         def query(self, **_: object) -> object:
+            """以固定异常标记后端已被调用。"""
+
             raise RuntimeError("backend reached")
 
     class ContextProvider:
+        """依次返回游客与管理员上下文，以验证每次重新认证。"""
+
         calls = 0
 
         def current_context(self) -> RequestContext:
+            """记录调用次数并返回本次调用对应的可信上下文。"""
+
             self.calls += 1
             role = Role.GUEST if self.calls == 1 else Role.ADMIN
             return context(f"caller-{self.calls}", role, RequestSource.AGENT_TOOL)

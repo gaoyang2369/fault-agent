@@ -29,6 +29,8 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+        """在 API 关闭时释放由组合根持有的数据库连接。"""
+
         yield
         composition.close()
 

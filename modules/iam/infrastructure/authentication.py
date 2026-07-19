@@ -26,6 +26,8 @@ class InMemoryBearerAuthenticationBackend:
     """供测试和本地组合使用的显式令牌映射，不读取业务 payload。"""
 
     def __init__(self, principals_by_token: dict[str, TrustedPrincipal]) -> None:
+        """复制令牌到可信主体的测试映射，避免调用方后续修改。"""
+
         self._principals_by_token = principals_by_token.copy()
 
     def authenticate(self, authorization: str | None) -> TrustedPrincipal:

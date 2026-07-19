@@ -35,6 +35,8 @@ class ReauthenticatingAgentToolContextProvider:
         authentication_backend: AuthenticationBackend,
         credential_provider: AgentCredentialProvider,
     ) -> None:
+        """保存认证与凭据端口，供每次工具调用重新构造上下文。"""
+
         self._authentication_backend = authentication_backend
         self._credential_provider = credential_provider
         self._context_factory = RequestContextFactory()
@@ -61,6 +63,8 @@ class TelemetryQueryTool:
         service: TelemetryQueryService,
         context_provider: AgentToolContextProvider,
     ) -> None:
+        """注入公共遥测应用服务和可信上下文提供器。"""
+
         self._service = service
         self._context_provider = context_provider
 

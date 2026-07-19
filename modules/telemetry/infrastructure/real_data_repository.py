@@ -467,9 +467,13 @@ class RealDataRepository:
         return sum(samples) / len(samples)
 
     def _to_source_naive(self, value: datetime) -> datetime:
+        """把带时区边界时间转换为源时区中的无时区查询参数。"""
+
         return value.astimezone(self._source_timezone).replace(tzinfo=None)
 
     def _deduplication_order(self, row: NormalizedRow) -> tuple[datetime, tuple[int, object]]:
+        """生成稳定去重排序键，使相同观测优先保留最新源记录。"""
+
         create_time = self._parse_datetime(row.raw.get("create_time")) or datetime.min.replace(
             tzinfo=UTC
         )
@@ -482,6 +486,8 @@ class RealDataRepository:
 
     @staticmethod
     def _validate_signals(signals: Sequence[str]) -> tuple[str, ...]:
+        """验证信号白名单并保持调用方给出的顺序。"""
+
         invalid = sorted(set(signals) - SIGNAL_COLUMNS)
         if invalid:
             raise ValueError(f"unsupported signals: {', '.join(invalid)}")
@@ -491,12 +497,16 @@ class RealDataRepository:
 
     @staticmethod
     def _assert_read_only(sql: str) -> None:
+        """拒绝不符合仓储只读约束的 SQL。"""
+
         if not _SELECT_ONLY.match(sql) or ";" in sql:
             raise ValueError("repository only permits one SELECT statement")
 
     def _normalize_observed_at(
         self, row: Mapping[str, object]
     ) -> tuple[datetime | None, list[DataQualityWarning]]:
+        """解析主时间戳或回退字段，并返回时间质量告警。"""
+
         record_id = str(row.get("id"))
         primary = self._parse_datetime(row.get("timestamp"))
         fallback = self._parse_datetime_parts(row.get("date"), row.get("time"))
@@ -521,11 +531,15 @@ class RealDataRepository:
         return observed_at, warnings
 
     def _parse_datetime_parts(self, raw_date: object, raw_time: object) -> datetime | None:
+        """组合源日期和时间字段，无法解析时返回空值。"""
+
         if raw_date is None or raw_time is None:
             return None
         return self._parse_datetime(f"{raw_date} {raw_time}")
 
     def _parse_datetime(self, value: object) -> datetime | None:
+        """兼容源表中的日期时间对象、Unix 毫秒和已知文本格式。"""
+
         parsed: datetime | None
         if isinstance(value, datetime):
             parsed = value
@@ -585,4 +599,6 @@ def raw_value(row: NormalizedRow, signal: str) -> object:
 
 
 def _optional_text(value: object) -> str | None:
+    """把可选源值规范为文本，同时保留真正的空值。"""
+
     return None if value is None else str(value)

@@ -26,9 +26,13 @@ class SourceFixture:
     """保存源记录并验证固定 SQL 查询形状。"""
 
     def __init__(self, rows: list[Row]) -> None:
+        """保存集成测试需要返回的源记录。"""
+
         self.rows = rows
 
     def fetch_all(self, sql: str, parameters: Sequence[object]) -> list[Row]:
+        """校验固定查询形状和资产定位参数后返回源记录。"""
+
         assert sql.startswith("SELECT ")
         assert sql.endswith("LIMIT %s")
         assert parameters[:2] == ("G120电机1", "G120电机1")

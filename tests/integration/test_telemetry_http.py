@@ -25,6 +25,8 @@ class HttpFixtureExecutor:
     """为 HTTP 集成测试提供两条源记录。"""
 
     def fetch_all(self, sql: str, parameters: Sequence[object]) -> list[Row]:
+        """校验查询目标和资产定位参数，并返回固定源记录。"""
+
         assert "FROM `real_data`" in sql
         assert parameters[:2] == ("G120电机1", "G120电机1")
         return [
@@ -34,6 +36,8 @@ class HttpFixtureExecutor:
 
 
 def _service(policy: IamAuthorizationPolicy | None = None) -> TelemetryQueryService:
+    """装配使用固定源数据和可选 IAM 策略的测试服务。"""
+
     repository = RealDataRepository(
         HttpFixtureExecutor(),
         source_timezone="UTC",
@@ -60,6 +64,8 @@ def test_public_telemetry_route_uses_injected_composition_root() -> None:
     """验证 HTTP 只接受公开命令，并返回不含源定位信息的契约结果。"""
 
     async def request_telemetry() -> tuple[int, dict[str, object]]:
+        """向内存 ASGI 应用提交一条合法游客聚合查询。"""
+
         app = create_app(_service())
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -87,6 +93,8 @@ def test_public_telemetry_route_uses_injected_composition_root() -> None:
 
 
 def test_telemetry_route_is_in_openapi_contract() -> None:
+    """验证遥测查询路由已进入生成的 OpenAPI 契约。"""
+
     schema = create_app(_service()).openapi()
 
     assert "/v1/telemetry/queries" in schema["paths"]
@@ -97,6 +105,8 @@ def test_public_telemetry_route_enforces_guest_aggregation() -> None:
     """验证公开 HTTP 入口不能以游客身份请求原始点。"""
 
     async def request_raw_points() -> tuple[int, dict[str, object]]:
+        """向内存 ASGI 应用提交应被拒绝的游客原始点查询。"""
+
         transport = ASGITransport(app=create_app(_service()))
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.post(
@@ -122,6 +132,8 @@ def test_http_authentication_boundary_supplies_engineer_identity_and_scope() -> 
     """验证 HTTP payload 不能自报身份，Bearer 认证结果决定工程师资产范围。"""
 
     async def request_as_engineer(payload: dict[str, object]) -> tuple[int, dict[str, object]]:
+        """使用可信 Bearer 主体提交工程师查询。"""
+
         principal = TrustedPrincipal(
             user_id="engineer-1",
             roles=frozenset({Role.ENGINEER}),
@@ -165,6 +177,8 @@ def test_invalid_bearer_token_returns_unauthorized() -> None:
     """验证无效认证凭据在调用应用服务前返回 401。"""
 
     async def request_with_invalid_token() -> tuple[int, dict[str, object]]:
+        """使用未映射的 Bearer 令牌提交查询。"""
+
         app = create_app(
             _service(),
             authentication_backend=InMemoryBearerAuthenticationBackend({}),

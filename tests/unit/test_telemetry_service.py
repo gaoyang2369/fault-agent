@@ -30,9 +30,13 @@ class FixtureExecutor:
     """为正式适配器返回预设源记录。"""
 
     def __init__(self, rows: list[Row]) -> None:
+        """保存正式适配器测试使用的固定源记录。"""
+
         self.rows = rows
 
     def fetch_all(self, sql: str, parameters: Sequence[object]) -> list[Row]:
+        """忽略查询细节并返回固定源记录。"""
+
         del sql, parameters
         return self.rows
 
@@ -65,6 +69,8 @@ def context() -> RequestContext:
 
 
 def quality_settings(**overrides: float) -> DataQualitySettings:
+    """构造默认质量阈值，并允许单项覆盖。"""
+
     values = {
         "nominal_interval_seconds": 3.0,
         "gap_warning_seconds": 9.0,
@@ -82,6 +88,8 @@ def service(
     max_return_points: int = 10_000,
     policy: TelemetryAuthorizationPolicy | None = None,
 ) -> TelemetryQueryService:
+    """装配使用固定源记录、质量配置和授权策略的测试服务。"""
+
     repository = RealDataRepository(
         FixtureExecutor(rows),
         source_timezone="UTC",
@@ -121,9 +129,13 @@ def test_policy_is_application_layer_and_can_rewrite_request() -> None:
     requested: list[TelemetryQueryCommand] = []
 
     class GuestPolicy:
+        """把查询确定性收紧为 60 秒平均值聚合的策略替身。"""
+
         def authorize(
             self, command: TelemetryQueryCommand, asset: object, request_context: RequestContext
         ) -> TelemetryQueryCommand:
+            """记录原始命令并返回增加聚合约束后的副本。"""
+
             del asset
             assert request_context.user_id == "authenticated-user"
             requested.append(command)
@@ -140,6 +152,8 @@ def test_policy_is_application_layer_and_can_rewrite_request() -> None:
 
 
 def test_service_limits_points_and_returns_invalid_value_warning() -> None:
+    """验证点数上限和非法信号值会产生对应告警。"""
+
     rows: list[Row] = [
         {"id": 1, "timestamp": "2026-07-16T00:00:00Z", "speed_actual": "bad"},
         {"id": 2, "timestamp": "2026-07-16T00:00:03Z", "speed_actual": 2},
@@ -152,6 +166,8 @@ def test_service_limits_points_and_returns_invalid_value_warning() -> None:
 
 
 def test_aggregation_rejects_reported_event_fields() -> None:
+    """验证故障码等事件字段不能执行数值聚合。"""
+
     request = command(
         signal_codes=("fault_code",),
         aggregation=AggregationSpec(window_seconds=60, functions=(AggregationFunction.MAX,)),
@@ -161,6 +177,8 @@ def test_aggregation_rejects_reported_event_fields() -> None:
 
 
 def test_data_quality_summary_uses_configured_thresholds_and_gaps() -> None:
+    """验证质量汇总使用显式配置计算完整度、时间错误和间隔。"""
+
     rows: list[Row] = [
         {"id": 1, "timestamp": "2026-07-16T00:00:00Z", "speed_actual": 1},
         {"id": 2, "timestamp": "2026-07-16T00:00:12Z", "speed_actual": 2},

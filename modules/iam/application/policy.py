@@ -19,6 +19,8 @@ class IamAuthorizationPolicy:
         *,
         now: Callable[[], datetime] | None = None,
     ) -> None:
+        """冻结权限配置，并允许测试注入可控的时钟。"""
+
         self._guest_visible_asset_ids = frozenset(config.guest_visible_asset_ids)
         self._engineer_asset_assignments = {
             user_id: frozenset(asset_ids)
@@ -69,11 +71,15 @@ class IamAuthorizationPolicy:
         raise PermissionError("action is not authorized")
 
     def _require_engineer_asset(self, context: RequestContext, asset_id: AssetId) -> None:
+        """确认工程师已被显式分配到目标资产。"""
+
         assigned = self._engineer_asset_assignments.get(context.user_id, frozenset())
         if asset_id not in assigned:
             raise PermissionError("engineer access to this asset is not assigned")
 
     def _authorize_guest_telemetry(self, command: TelemetryQueryCommand, asset_id: AssetId) -> None:
+        """校验游客的资产、时间、聚合粒度和信号范围。"""
+
         if asset_id not in self._guest_visible_asset_ids:
             raise PermissionError("guest access to this asset is not allowed")
         now = self._now()

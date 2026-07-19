@@ -99,6 +99,8 @@ def _error_response(
     *,
     retryable: bool = False,
 ) -> JSONResponse:
+    """按统一公开错误契约构造 JSON 响应。"""
+
     payload = ErrorResponse(
         error=ErrorDetail(
             code=code,
