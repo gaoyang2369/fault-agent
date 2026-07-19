@@ -1,4 +1,4 @@
-"""Application service shared by HTTP controllers and Agent tools."""
+"""供 HTTP 控制器与 Agent tools 复用的旧版应用服务。"""
 
 from __future__ import annotations
 
@@ -32,19 +32,25 @@ from modules.telemetry.repository import (
 
 
 class TelemetryPolicy(Protocol):
-    def authorize(self, command: TelemetryQuery, context: RequestContext) -> TelemetryQuery: ...
+    """定义旧版遥测命令的确定性授权接口。"""
+
+    def authorize(self, command: TelemetryQuery, context: RequestContext) -> TelemetryQuery:
+        """根据可信上下文校验或收紧查询命令。"""
+        ...
 
 
 class AllowAllTelemetryPolicy:
-    """Temporary deterministic policy until Task 5 supplies IAM-backed policy."""
+    """Task 5 接入 IAM 前使用的临时确定性放行策略。"""
 
     def authorize(self, command: TelemetryQuery, context: RequestContext) -> TelemetryQuery:
+        """忽略上下文并原样返回命令，仅供开发阶段使用。"""
+
         del context
         return command
 
 
 class TelemetryQueryService:
-    """Deprecated Task 3.1 adapter; new callers use application.service."""
+    """已弃用的 Task 3.1 服务，新调用应使用 application.service。"""
 
     def __init__(
         self,
@@ -54,6 +60,8 @@ class TelemetryQueryService:
         max_return_points: int = 10_000,
         policy: TelemetryPolicy | None = None,
     ) -> None:
+        """装配仓储、显式质量参数、返回上限和可替换授权策略。"""
+
         if max_return_points <= 0:
             raise ValueError("max_return_points must be greater than zero")
         self._repository = repository
@@ -62,6 +70,8 @@ class TelemetryQueryService:
         self._policy = policy or AllowAllTelemetryPolicy()
 
     def query(self, command: TelemetryQuery, context: RequestContext) -> TelemetryQueryResult:
+        """执行授权、只读查询、原始/聚合转换、限流和质量汇总。"""
+
         authorized = self._policy.authorize(command, context)
         maximum = min(authorized.max_points, self._max_return_points)
         repository_result = self._repository.query(
@@ -107,6 +117,8 @@ class TelemetryQueryService:
         rows: Sequence[NormalizedRow],
         repository_result: RepositoryResult,
     ) -> DataQualitySummary:
+        """按配置计算完整率与间隔，并据此门控趋势和持续时间分析。"""
+
         gaps: list[float] = []
         groups: defaultdict[tuple[str | None, str | None], list[NormalizedRow]] = defaultdict(list)
         for row in rows:
@@ -168,6 +180,8 @@ class TelemetryQueryService:
         signals: Sequence[str],
         warnings: list[DataQualityWarning],
     ) -> TelemetryPoint:
+        """把一条规范源记录转换为遥测点，并记录非法信号值告警。"""
+
         values: dict[str, SignalValue] = {}
         record_id = str(row.raw.get("id"))
         for signal in signals:
@@ -203,6 +217,8 @@ class TelemetryQueryService:
         request: TelemetryQuery,
         warnings: list[DataQualityWarning],
     ) -> list[TelemetryPoint]:
+        """按资产源身份和固定时间窗口聚合数值信号。"""
+
         assert request.aggregation is not None
         non_numeric = sorted(set(request.signals) - NUMERIC_SIGNALS)
         if non_numeric:
@@ -258,6 +274,8 @@ class TelemetryQueryService:
 
     @staticmethod
     def _apply_aggregate(function: AggregationFunction, samples: Sequence[float]) -> float | None:
+        """对非空样本执行最小值、最大值或平均值聚合。"""
+
         if not samples:
             return None
         if function is AggregationFunction.MIN:
@@ -268,4 +286,6 @@ class TelemetryQueryService:
 
 
 def _optional_text(value: object) -> str | None:
+    """把非空源值稳定转换为文本，空值保持为空。"""
+
     return None if value is None else str(value)

@@ -1,1 +1,1 @@
-"""Read-only operational tooling."""
+"""只读运维与研发工具包。"""

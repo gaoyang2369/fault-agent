@@ -1,1 +1,1 @@
-"""Evidence and claim traceability module boundary."""
+"""证据与声明可追溯模块边界。"""

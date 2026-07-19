@@ -1,1 +1,1 @@
-"""faultAgent test suite."""
+"""faultAgent 测试套件。"""

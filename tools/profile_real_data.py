@@ -1,7 +1,7 @@
-"""Read-only profiler for the historical ``real_data`` source.
+"""历史 ``real_data`` 数据源的只读摸底工具。
 
-Run with ``python -m tools.profile_real_data``. The database DSN is read from
-``REAL_DATA_DSN`` and is never included in the generated reports.
+使用 ``python -m tools.profile_real_data`` 运行。数据库 DSN 从
+``REAL_DATA_DSN`` 读取，且永远不会写入生成的报告。
 """
 
 from __future__ import annotations
@@ -74,7 +74,7 @@ SELECT_PREFIX = re.compile(r"^\s*SELECT\b", re.IGNORECASE)
 
 @dataclass(frozen=True)
 class ConnectionSettings:
-    """Validated MySQL connection settings without a printable DSN."""
+    """不保留可打印 DSN 的已校验 MySQL 连接配置。"""
 
     host: str
     port: int
@@ -85,7 +85,7 @@ class ConnectionSettings:
 
 
 def parse_mysql_dsn(dsn: str, timeout_seconds: int) -> ConnectionSettings:
-    """Parse a MySQL DSN without including credentials in errors."""
+    """解析 MySQL DSN，并确保异常信息不包含连接凭据。"""
     parsed = urlsplit(dsn)
     if parsed.scheme not in {"mysql", "mysql+pymysql"}:
         raise ValueError("REAL_DATA_DSN must use mysql:// or mysql+pymysql://")
@@ -105,15 +105,17 @@ def parse_mysql_dsn(dsn: str, timeout_seconds: int) -> ConnectionSettings:
 
 
 def validate_select(sql: str) -> None:
-    """Reject any statement that is not a single SELECT."""
+    """拒绝任何不是单条 SELECT 的数据库语句。"""
     if not SELECT_PREFIX.match(sql) or ";" in sql:
         raise ValueError("profiler only permits a single SELECT statement")
 
 
 class ReadOnlyMySQLClient:
-    """Minimal MySQL client that executes only parameterized SELECT queries."""
+    """只执行参数化 SELECT 查询的最小 MySQL 客户端。"""
 
     def __init__(self, settings: ConnectionSettings) -> None:
+        """使用显式超时配置建立数据摸底专用 MySQL 连接。"""
+
         self._connection = pymysql.connect(
             host=settings.host,
             port=settings.port,
@@ -128,15 +130,21 @@ class ReadOnlyMySQLClient:
         )
 
     def close(self) -> None:
+        """关闭数据摸底使用的数据库连接。"""
+
         self._connection.close()
 
     def fetch_all(self, sql: str, parameters: Sequence[object] = ()) -> list[Row]:
+        """校验并执行参数化 SELECT，返回全部字典行。"""
+
         validate_select(sql)
         with self._connection.cursor() as cursor:
             cursor.execute(sql, parameters)
             return cast(list[Row], cursor.fetchall())
 
     def fetch_one(self, sql: str, parameters: Sequence[object] = ()) -> Row:
+        """执行参数化 SELECT，并要求查询恰好返回一行。"""
+
         rows = self.fetch_all(sql, parameters)
         if len(rows) != 1:
             raise RuntimeError("expected exactly one profiling result row")
@@ -144,14 +152,20 @@ class ReadOnlyMySQLClient:
 
 
 class ProfileClient(Protocol):
-    """Query surface used by the deterministic profiler."""
+    """确定性数据摸底逻辑依赖的最小查询接口。"""
 
-    def fetch_all(self, sql: str, parameters: Sequence[object] = ()) -> list[Row]: ...
+    def fetch_all(self, sql: str, parameters: Sequence[object] = ()) -> list[Row]:
+        """执行一条预定义参数化查询并返回全部行。"""
+        ...
 
-    def fetch_one(self, sql: str, parameters: Sequence[object] = ()) -> Row: ...
+    def fetch_one(self, sql: str, parameters: Sequence[object] = ()) -> Row:
+        """执行一条预定义参数化查询并返回唯一结果行。"""
+        ...
 
 
 def _parse_datetime_value(value: object) -> datetime | None:
+    """按已知源格式解析日期时间值，无法解析时返回空值。"""
+
     if isinstance(value, datetime):
         return value
     if isinstance(value, date):
@@ -180,7 +194,7 @@ def _parse_datetime_value(value: object) -> datetime | None:
 
 
 def parse_observed_at(row: Mapping[str, object]) -> tuple[datetime | None, str]:
-    """Parse the primary timestamp, then fall back to date plus time."""
+    """优先解析主时间戳，失败时回退到 date 与 time 组合。"""
     primary = _parse_datetime_value(row.get("timestamp"))
     if primary is not None:
         return primary, "timestamp"
@@ -195,6 +209,8 @@ def parse_observed_at(row: Mapping[str, object]) -> tuple[datetime | None, str]:
 
 
 def _finite_float(value: object) -> float | None:
+    """把输入转换为有限浮点数，布尔、空值和非有限数返回空值。"""
+
     if value is None or isinstance(value, bool):
         return None
     if not isinstance(value, str | int | float | Decimal):
@@ -207,7 +223,7 @@ def _finite_float(value: object) -> float | None:
 
 
 def percentile(sorted_values: Sequence[float], fraction: float) -> float | None:
-    """Calculate a linearly interpolated percentile from sorted values."""
+    """从已排序样本计算线性插值分位数。"""
     if not sorted_values:
         return None
     position = (len(sorted_values) - 1) * fraction
@@ -220,7 +236,7 @@ def percentile(sorted_values: Sequence[float], fraction: float) -> float | None:
 
 
 def numeric_statistics(rows: Sequence[Row], columns: Iterable[str]) -> dict[str, JsonValue]:
-    """Calculate null rates, descriptive statistics, and percentiles."""
+    """计算数值列空值率、描述统计量和分位数。"""
     result: dict[str, JsonValue] = {}
     total = len(rows)
     for column in columns:
@@ -257,7 +273,7 @@ def numeric_statistics(rows: Sequence[Row], columns: Iterable[str]) -> dict[str,
 def time_parsing_statistics(
     rows: Sequence[Row],
 ) -> tuple[dict[str, JsonValue], list[datetime | None]]:
-    """Profile primary/fallback timestamp parsing without assuming a source timezone."""
+    """在不假设源时区的前提下统计主时间戳与回退时间的解析情况。"""
     sources: Counter[str] = Counter()
     parsed: list[datetime | None] = []
     for row in rows:
@@ -283,7 +299,7 @@ def time_parsing_statistics(
 def interval_statistics(
     rows: Sequence[Row], parsed_times: Sequence[datetime | None]
 ) -> dict[str, JsonValue]:
-    """Calculate observed sampling intervals per device/inverter pair."""
+    """按设备与变频器组合计算实际观测采样间隔。"""
     groups: defaultdict[tuple[str, str], list[datetime]] = defaultdict(list)
     for row, observed_at in zip(rows, parsed_times, strict=True):
         if observed_at is None:
@@ -320,7 +336,7 @@ def interval_statistics(
 
 
 def frozen_field_candidates(rows: Sequence[Row], columns: Iterable[str]) -> list[JsonValue]:
-    """Report constant fields and longest consecutive equal-value runs as facts."""
+    """仅以事实形式报告常量字段和最长连续相同值区段。"""
     candidates: list[JsonValue] = []
     for column in columns:
         values = [row.get(column) for row in rows]
@@ -348,6 +364,8 @@ def frozen_field_candidates(rows: Sequence[Row], columns: Iterable[str]) -> list
 
 
 def _json_value(value: object) -> JsonValue:
+    """把任意数据库值转换为可安全序列化的 JSON 值。"""
+
     if value is None or isinstance(value, str | int | float | bool):
         return value
     if isinstance(value, datetime):
@@ -358,10 +376,14 @@ def _json_value(value: object) -> JsonValue:
 
 
 def _serialize_rows(rows: Sequence[Row]) -> list[JsonValue]:
+    """把数据库行集合转换为 JSON 可序列化结构。"""
+
     return [{key: _json_value(value) for key, value in row.items()} for row in rows]
 
 
 def _markdown_cell(value: JsonValue) -> str:
+    """把 JSON 值转义为可安全放入 Markdown 表格单元格的文本。"""
+
     if value is None:
         return "null"
     if isinstance(value, float):
@@ -377,7 +399,7 @@ def collect_profile(
     duplicate_limit: int,
     query_timeout_seconds: int,
 ) -> dict[str, JsonValue]:
-    """Collect full-table aggregates and bounded in-memory sample statistics."""
+    """收集全表聚合事实和受样本上限约束的内存统计。"""
     summary = client.fetch_one(
         "SELECT COUNT(*) AS row_count, MIN(create_time) AS min_create_time, "
         "MAX(create_time) AS max_create_time FROM `real_data`"
@@ -446,7 +468,7 @@ def collect_profile(
 
 
 def render_markdown(profile: Mapping[str, JsonValue]) -> str:
-    """Render all profiling categories as a human-readable Markdown report."""
+    """把全部数据摸底类别渲染为便于人工阅读的 Markdown 报告。"""
     metadata = cast(dict[str, JsonValue], profile["metadata"])
     summary = cast(dict[str, JsonValue], profile["record_summary"])
     time_stats = cast(dict[str, JsonValue], profile["time_parsing"])
@@ -630,6 +652,8 @@ def render_markdown(profile: Mapping[str, JsonValue]) -> str:
 
 
 def _bounded_positive(value: str, *, maximum: int) -> int:
+    """解析受最大值约束的正整数 CLI 参数。"""
+
     parsed = int(value)
     if parsed <= 0 or parsed > maximum:
         raise argparse.ArgumentTypeError(f"value must be between 1 and {maximum}")
@@ -637,6 +661,8 @@ def _bounded_positive(value: str, *, maximum: int) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """构建只接受安全采样与输出参数的数据摸底命令行解析器。"""
+
     parser = argparse.ArgumentParser(description="Profile real_data using SELECT-only queries")
     parser.add_argument(
         "--sample-limit",
@@ -659,7 +685,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """CLI entry point. Connection details remain process-local."""
+    """运行数据摸底 CLI，连接详情始终只保留在当前进程。"""
     args = build_parser().parse_args(argv)
     dsn = os.getenv("REAL_DATA_DSN")
     if not dsn:

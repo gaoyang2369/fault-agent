@@ -1,1 +1,1 @@
-"""Process entry points for faultAgent."""
+"""faultAgent 的进程入口包。"""

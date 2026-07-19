@@ -1,1 +1,1 @@
-"""Deterministic diagnosis module boundary."""
+"""确定性诊断模块边界。"""

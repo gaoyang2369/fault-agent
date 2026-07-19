@@ -1,4 +1,4 @@
-"""Public telemetry query result."""
+"""公开遥测查询结果契约。"""
 
 from enum import StrEnum
 
@@ -11,10 +11,14 @@ from shared.time import TimeRange
 
 
 class SourceType(StrEnum):
+    """对外可披露的数据来源类别。"""
+
     REAL_DATA = "REAL_DATA"
 
 
 class SourceMetadata(BaseModel):
+    """描述一次查询的扫描、匹配、去重和截断情况。"""
+
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     source_type: SourceType = SourceType.REAL_DATA
@@ -25,6 +29,8 @@ class SourceMetadata(BaseModel):
 
 
 class TelemetryQueryResult(BaseModel):
+    """汇总资产遥测点、数据质量、告警和非敏感来源元数据。"""
+
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     asset_id: AssetId

@@ -1,4 +1,4 @@
-"""Smoke tests for required modular-monolith package boundaries."""
+"""模块化单体必要包边界的冒烟测试。"""
 
 import importlib
 
@@ -21,4 +21,6 @@ REQUIRED_PACKAGES = (
 
 @pytest.mark.parametrize("package_name", REQUIRED_PACKAGES)
 def test_required_package_is_importable(package_name: str) -> None:
+    """验证架构要求的各顶层包均可独立导入。"""
+
     assert importlib.import_module(package_name) is not None

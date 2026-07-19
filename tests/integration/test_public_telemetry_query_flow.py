@@ -1,4 +1,4 @@
-"""Public asset-based flow hides the real_data locator."""
+"""验证基于公开资产的流程会隐藏 real_data 定位信息。"""
 
 import asyncio
 from collections.abc import Sequence
@@ -15,7 +15,11 @@ from shared.context import RequestContext, RequestSource, Role
 
 
 class FixtureExecutor:
+    """为公开遥测集成流程提供固定源记录的查询执行器。"""
+
     def fetch_all(self, sql: str, parameters: Sequence[object]) -> list[Row]:
+        """忽略固定查询文本并返回一条可归一化的源记录。"""
+
         del sql, parameters
         return [
             {
@@ -29,6 +33,8 @@ class FixtureExecutor:
 
 
 def test_public_flow_uses_asset_and_does_not_return_locator_fields() -> None:
+    """验证公开流程按资产查询，且结果不泄露源表定位字段。"""
+
     assets = InMemoryAssetRepository.g120_fixture()
     legacy = LegacyTelemetryQueryService(
         RealDataRepository(

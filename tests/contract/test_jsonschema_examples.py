@@ -1,4 +1,4 @@
-"""Committed examples are executable JSON Schema contracts."""
+"""验证仓库内示例可作为可执行 JSON Schema 契约。"""
 
 import json
 from pathlib import Path
@@ -24,12 +24,16 @@ EXAMPLE_SCHEMAS = {
 
 @pytest.mark.parametrize(("example_name", "schema_name"), EXAMPLE_SCHEMAS.items())
 def test_valid_example_matches_schema(example_name: str, schema_name: str) -> None:
+    """验证每个公开正例都符合其指定 JSON Schema。"""
+
     schema = json.loads((SCHEMA_DIR / schema_name).read_text(encoding="utf-8"))
     example = json.loads((EXAMPLE_DIR / example_name).read_text(encoding="utf-8"))
     Draft202012Validator(schema).validate(example)
 
 
 def test_invalid_example_fails_schema() -> None:
+    """验证故意构造的非法查询示例无法通过契约校验。"""
+
     schema = json.loads(
         (SCHEMA_DIR / "telemetry-query-command.schema.json").read_text(encoding="utf-8")
     )
@@ -38,6 +42,8 @@ def test_invalid_example_fails_schema() -> None:
 
 
 def test_public_schemas_do_not_expose_source_locator_or_query_identity() -> None:
+    """验证公开 Schema 不暴露源定位信息或不可信查询身份。"""
+
     schemas = "\n".join(
         path.read_text(encoding="utf-8") for path in sorted(SCHEMA_DIR.glob("*.schema.json"))
     )

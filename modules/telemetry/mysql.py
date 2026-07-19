@@ -1,4 +1,4 @@
-"""PyMySQL wiring kept separate from the repository's query logic."""
+"""与仓储查询逻辑隔离的 PyMySQL 基础设施装配。"""
 
 from __future__ import annotations
 
@@ -20,13 +20,17 @@ _SELECT_ONLY = re.compile(r"^\s*SELECT\b", re.IGNORECASE)
 
 
 class MySQLQueryExecutor:
-    """Own a read-only DB session and reject every non-SELECT statement."""
+    """持有只读数据库会话，并拒绝所有非 SELECT 语句。"""
 
     def __init__(self, connection: Connection) -> None:
+        """保存已建立且应配置为只读的数据库连接。"""
+
         self._connection = connection
 
     @classmethod
     def connect(cls, dsn: str, *, timeout_seconds: int) -> MySQLQueryExecutor:
+        """解析 DSN，以显式超时和只读事务配置建立 MySQL 会话。"""
+
         settings = parse_mysql_dsn(dsn, timeout_seconds)
         connection = pymysql.connect(
             host=settings.host,
@@ -44,6 +48,8 @@ class MySQLQueryExecutor:
         return cls(cast(Connection, connection))
 
     def fetch_all(self, sql: str, parameters: Sequence[object]) -> list[Row]:
+        """防御性校验并执行一条参数化 SELECT，返回全部字典行。"""
+
         if not _SELECT_ONLY.match(sql) or ";" in sql:
             raise ValueError("telemetry database session only permits one SELECT statement")
         with self._connection.cursor() as cursor:
@@ -51,11 +57,13 @@ class MySQLQueryExecutor:
             return cast(list[dict[str, Any]], cursor.fetchall())
 
     def close(self) -> None:
+        """关闭当前持有的数据库连接。"""
+
         self._connection.close()
 
 
 def create_repository_from_environment() -> tuple[RealDataRepository, MySQLQueryExecutor]:
-    """Create production wiring while requiring an explicit source timezone."""
+    """从环境变量装配仓储，并强制要求显式源时区和安全限制。"""
     dsn = os.getenv("REAL_DATA_DSN")
     if not dsn:
         raise ValueError("REAL_DATA_DSN must be configured")
@@ -82,7 +90,7 @@ def create_repository_from_environment() -> tuple[RealDataRepository, MySQLQuery
 
 
 def create_service_from_environment() -> tuple[TelemetryQueryService, MySQLQueryExecutor]:
-    """Create the shared application service with configured safety limits."""
+    """使用配置的质量参数和安全上限创建旧版共享应用服务。"""
     repository, executor = create_repository_from_environment()
     max_return_points = int(os.getenv("TELEMETRY_MAX_RETURN_POINTS", "10000"))
     quality_settings = DataQualitySettings(
@@ -102,6 +110,8 @@ def create_service_from_environment() -> tuple[TelemetryQueryService, MySQLQuery
 
 
 def _required_float(name: str) -> float:
+    """读取必填浮点环境变量，缺失时立即报错而不猜测默认值。"""
+
     raw_value = os.getenv(name)
     if raw_value is None:
         raise ValueError(f"{name} must be configured")

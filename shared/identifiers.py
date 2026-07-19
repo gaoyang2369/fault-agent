@@ -1,4 +1,4 @@
-"""Semantically distinct public identifiers."""
+"""语义明确且相互区分的公开标识类型。"""
 
 from typing import Annotated
 

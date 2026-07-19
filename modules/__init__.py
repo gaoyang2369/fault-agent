@@ -1,1 +1,1 @@
-"""Business modules in the modular monolith."""
+"""模块化单体中的业务模块包。"""

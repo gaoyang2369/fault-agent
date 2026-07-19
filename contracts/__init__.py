@@ -1,4 +1,4 @@
-"""Shared public contracts.
+"""跨模块共享的公开契约。
 
-Concrete domain contracts are intentionally deferred to the contract-design task.
+具体领域契约由契约设计任务逐步补齐。
 """

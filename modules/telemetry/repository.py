@@ -1,4 +1,4 @@
-"""Read-only adapter for the legacy ``real_data`` wide table."""
+"""旧版 ``real_data`` 宽表的只读适配器。"""
 
 from __future__ import annotations
 
@@ -58,16 +58,26 @@ _SELECT_ONLY = re.compile(r"^\s*SELECT\b", re.IGNORECASE)
 
 
 class QueryExecutor(Protocol):
-    def fetch_all(self, sql: str, parameters: Sequence[object]) -> list[Row]: ...
+    """抽象执行参数化查询所需的最小数据库接口。"""
+
+    def fetch_all(self, sql: str, parameters: Sequence[object]) -> list[Row]:
+        """执行一条参数化只读查询并返回全部字典行。"""
+        ...
 
 
 class NormalizedRow:
+    """把原始源记录与已归一化的带时区观测时间绑定。"""
+
     def __init__(self, raw: Row, observed_at: datetime) -> None:
+        """保存原始行及其对应的规范观测时间。"""
+
         self.raw = raw
         self.observed_at = observed_at
 
 
 class RepositoryResult:
+    """承载仓储读取行、质量告警、截断和去重统计。"""
+
     def __init__(
         self,
         rows: list[NormalizedRow],
@@ -77,6 +87,8 @@ class RepositoryResult:
         discarded_duplicate_count: int,
         timestamp_parse_failure_count: int,
     ) -> None:
+        """初始化一次仓储查询的完整内部结果。"""
+
         self.rows = rows
         self.warnings = warnings
         self.scanned_rows = scanned_rows
@@ -86,7 +98,7 @@ class RepositoryResult:
 
 
 class RealDataRepository:
-    """Build fixed SELECT statements; callers cannot supply SQL or column names."""
+    """构造固定 SELECT，调用者不能提供 SQL 或任意列名。"""
 
     def __init__(
         self,
@@ -96,6 +108,8 @@ class RealDataRepository:
         create_time_filter_buffer_seconds: float,
         max_scan_rows: int = 100_000,
     ) -> None:
+        """校验源时区、扫描上限和粗筛缓冲，并装配查询执行器。"""
+
         if not source_timezone.strip():
             raise ValueError("source_timezone must be configured")
         try:
@@ -119,6 +133,8 @@ class RealDataRepository:
         end: datetime,
         signals: Sequence[str],
     ) -> RepositoryResult:
+        """按源身份、时间范围和信号白名单读取、归一化并去重源记录。"""
+
         selected_signals = self._validate_signals(signals)
         columns = (*BASE_COLUMNS, *selected_signals)
         sql = f"SELECT {', '.join(f'`{name}`' for name in columns)} FROM `real_data`"
@@ -194,9 +210,13 @@ class RealDataRepository:
         )
 
     def _to_source_naive(self, value: datetime) -> datetime:
+        """把带时区时间转换为源时区的无时区值，以匹配旧表 create_time。"""
+
         return value.astimezone(self._source_timezone).replace(tzinfo=None)
 
     def _deduplication_order(self, row: NormalizedRow) -> tuple[datetime, tuple[int, object]]:
+        """生成按创建时间和记录 id 保留最新重复记录的稳定排序键。"""
+
         create_time = self._parse_datetime(row.raw.get("create_time")) or datetime.min.replace(
             tzinfo=UTC
         )
@@ -209,6 +229,8 @@ class RealDataRepository:
 
     @staticmethod
     def _validate_signals(signals: Sequence[str]) -> tuple[str, ...]:
+        """拒绝空信号集合及不在显式白名单中的列名。"""
+
         invalid = sorted(set(signals) - SIGNAL_COLUMNS)
         if invalid:
             raise ValueError(f"unsupported signals: {', '.join(invalid)}")
@@ -218,12 +240,16 @@ class RealDataRepository:
 
     @staticmethod
     def _assert_read_only(sql: str) -> None:
+        """防御性确认仓储只执行单条 SELECT 语句。"""
+
         if not _SELECT_ONLY.match(sql) or ";" in sql:
             raise ValueError("repository only permits one SELECT statement")
 
     def _normalize_observed_at(
         self, row: Mapping[str, object]
     ) -> tuple[datetime | None, list[DataQualityWarning]]:
+        """优先解析 timestamp，回退到 date+time，并报告冲突或失败。"""
+
         record_id = str(row.get("id"))
         primary = self._parse_datetime(row.get("timestamp"))
         fallback = self._parse_datetime_parts(row.get("date"), row.get("time"))
@@ -248,11 +274,15 @@ class RealDataRepository:
         return observed_at, warnings
 
     def _parse_datetime_parts(self, raw_date: object, raw_time: object) -> datetime | None:
+        """组合源表日期和时间字段后交由统一时间解析逻辑处理。"""
+
         if raw_date is None or raw_time is None:
             return None
         return self._parse_datetime(f"{raw_date} {raw_time}")
 
     def _parse_datetime(self, value: object) -> datetime | None:
+        """解析受支持的日期时间格式，按配置源时区解释无时区值并转为 UTC。"""
+
         parsed: datetime | None
         if isinstance(value, datetime):
             parsed = value
@@ -292,6 +322,8 @@ class RealDataRepository:
 
 
 def numeric_value(value: object) -> float | None:
+    """把受支持的源值转换为有限浮点数，缺失或非法值返回空值。"""
+
     if value is None or isinstance(value, bool):
         return None
     if not isinstance(value, str | int | float | Decimal):
@@ -304,4 +336,6 @@ def numeric_value(value: object) -> float | None:
 
 
 def raw_value(row: NormalizedRow, signal: str) -> object:
+    """从规范行中读取指定白名单信号的原始值。"""
+
     return cast(object, row.raw.get(signal))

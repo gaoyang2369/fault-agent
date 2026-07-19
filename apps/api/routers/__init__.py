@@ -1,1 +1,1 @@
-"""HTTP route definitions."""
+"""HTTP 路由定义包。"""

@@ -1,1 +1,1 @@
-"""Diagnostic report snapshot module boundary."""
+"""诊断报告快照模块边界。"""

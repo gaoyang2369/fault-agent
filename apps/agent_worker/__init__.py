@@ -1,4 +1,4 @@
-"""Agent worker process boundary.
+"""Agent worker 进程边界。
 
-No LLM implementation is included in the M0 skeleton.
+M0 骨架不包含 LLM 实现。
 """

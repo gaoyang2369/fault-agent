@@ -1,4 +1,4 @@
-"""Integration test across query contract, repository, and application service."""
+"""跨查询契约、仓储和应用服务的集成测试。"""
 
 from collections.abc import Sequence
 from datetime import UTC, datetime
@@ -15,16 +15,24 @@ from modules.telemetry.service import TelemetryQueryService
 
 
 class SourceFixture:
+    """保存集成测试源记录并实现最小查询执行器协议。"""
+
     def __init__(self, rows: list[Row]) -> None:
+        """保存后续查询要返回的源记录。"""
+
         self.rows = rows
 
     def fetch_all(self, sql: str, parameters: Sequence[object]) -> list[Row]:
+        """校验固定查询形状并返回源记录。"""
+
         assert sql.startswith("SELECT ")
         assert sql.endswith("LIMIT %s")
         return self.rows
 
 
 def test_normalized_aggregated_query_flow() -> None:
+    """验证从源记录归一化到聚合公开结果的完整查询流程。"""
+
     source = SourceFixture(
         [
             {

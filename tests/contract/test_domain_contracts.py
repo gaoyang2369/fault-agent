@@ -1,4 +1,4 @@
-"""Positive and negative tests for Task 4 public contracts."""
+"""Task 4 公开契约的正例与反例测试。"""
 
 from datetime import UTC, datetime, timedelta
 
@@ -28,6 +28,8 @@ from shared.time import TimeRange
 
 
 def valid_command() -> dict[str, object]:
+    """构造满足公开遥测查询契约的基础命令字典。"""
+
     return {
         "asset_code": "G120-1",
         "time_range": {
@@ -49,6 +51,8 @@ def valid_command() -> dict[str, object]:
     ],
 )
 def test_public_query_rejects_private_or_identity_fields(field: str, value: object) -> None:
+    """验证公开查询拒绝私有源定位字段和调用者自报身份字段。"""
+
     payload = valid_command()
     payload[field] = value
     with pytest.raises(ValidationError):
@@ -56,6 +60,8 @@ def test_public_query_rejects_private_or_identity_fields(field: str, value: obje
 
 
 def test_time_range_requires_timezone_and_order_and_normalizes_to_utc() -> None:
+    """验证时间范围要求时区与正确顺序，并统一归一化为 UTC。"""
+
     with pytest.raises(ValidationError, match="timezone-aware"):
         TimeRange(start=datetime(2026, 1, 1), end=datetime(2026, 1, 2))
     with pytest.raises(ValidationError, match="before"):
@@ -68,6 +74,8 @@ def test_time_range_requires_timezone_and_order_and_normalizes_to_utc() -> None:
 
 
 def test_unknown_signal_unit_is_allowed_but_cannot_enable_diagnostics() -> None:
+    """验证未知单位可以保留，但不能启用依赖单位的诊断。"""
+
     signal = SignalDefinition(
         signal_code="motor_temp",
         display_name="motor temperature",
@@ -81,6 +89,8 @@ def test_unknown_signal_unit_is_allowed_but_cannot_enable_diagnostics() -> None:
 
 
 def test_confirmed_fault_requires_human_identity_and_aware_time() -> None:
+    """验证确认故障必须包含人员身份和带时区确认时间。"""
+
     base = {
         "confirmed_fault_id": "confirmed-1",
         "fault_code": "FIELD_CONFIRMED",
@@ -96,6 +106,8 @@ def test_confirmed_fault_requires_human_identity_and_aware_time() -> None:
 
 
 def test_material_claim_requires_evidence_or_explicit_insufficient_status() -> None:
+    """验证实质性声明必须引用支持证据或明确标记证据不足。"""
+
     base = {
         "claim_id": "claim-1",
         "claim_type": ClaimType.MATERIAL,
@@ -110,6 +122,8 @@ def test_material_claim_requires_evidence_or_explicit_insufficient_status() -> N
 
 
 def test_hypothesis_accepts_multiple_supporting_and_contradicting_evidence() -> None:
+    """验证故障假设可同时保留多条支持与反驳证据。"""
+
     hypothesis = Hypothesis(
         hypothesis_id="hyp-1",
         hypothesis_code="CHECK_TWO_CAUSES",
@@ -122,6 +136,8 @@ def test_hypothesis_accepts_multiple_supporting_and_contradicting_evidence() -> 
 
 
 def test_data_quality_gates_trend_and_duration_analyses() -> None:
+    """验证数据质量状态会阻止不安全的趋势与持续时间分析。"""
+
     values = {
         "status": DataQualityStatus.INSUFFICIENT,
         "expected_points": 10,

@@ -1,1 +1,1 @@
-"""Drive system and component asset module boundary."""
+"""驱动系统及组件资产模块边界。"""

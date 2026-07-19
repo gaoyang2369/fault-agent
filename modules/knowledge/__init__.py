@@ -1,1 +1,1 @@
-"""Versioned diagnostic knowledge module boundary."""
+"""带版本诊断知识模块边界。"""

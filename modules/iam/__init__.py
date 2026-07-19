@@ -1,1 +1,1 @@
-"""Identity and access management module boundary."""
+"""身份与访问管理模块边界。"""

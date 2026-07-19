@@ -1,1 +1,1 @@
-"""Cross-module value objects and request metadata."""
+"""跨模块值对象和请求元数据包。"""

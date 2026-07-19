@@ -1,4 +1,4 @@
-"""Generate the committed public JSON Schema contracts."""
+"""生成需要提交到仓库的公开 JSON Schema 契约。"""
 
 import json
 from pathlib import Path
@@ -39,6 +39,8 @@ SCHEMAS: dict[str, type[BaseModel]] = {
 
 
 def main() -> None:
+    """从当前 Pydantic 公开模型重新生成全部 JSON Schema 文件。"""
+
     output = Path(__file__).with_name("jsonschema")
     output.mkdir(exist_ok=True)
     for filename, model in SCHEMAS.items():

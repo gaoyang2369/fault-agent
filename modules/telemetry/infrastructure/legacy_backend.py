@@ -1,4 +1,4 @@
-"""Bridge Task 3.1 source querying into the Task 4 public result."""
+"""把 Task 3.1 源表查询桥接为 Task 4 公开结果。"""
 
 from modules.asset.infrastructure.models import RealDataSourceLocator
 from modules.telemetry.application.commands import (
@@ -27,9 +27,11 @@ from shared.identifiers import AssetId
 
 
 class LegacyRealDataBackend:
-    """Temporary infrastructure compatibility backend; remove after Task 3.1 migration."""
+    """临时基础设施兼容后端，Task 3.1 迁移完成后删除。"""
 
     def __init__(self, legacy_service: LegacyTelemetryQueryService) -> None:
+        """保存待桥接的旧版遥测查询服务。"""
+
         self._legacy_service = legacy_service
 
     def query(
@@ -40,6 +42,8 @@ class LegacyRealDataBackend:
         command: TelemetryQueryCommand,
         context: RequestContext,
     ) -> TelemetryQueryResult:
+        """转换新旧命令、上下文、质量和点模型，并隐藏私有源定位信息。"""
+
         if not isinstance(source_locator, RealDataSourceLocator):
             raise TypeError("real_data backend requires RealDataSourceLocator")
         legacy_result = self._legacy_service.query(
@@ -104,6 +108,8 @@ class LegacyRealDataBackend:
 
 
 def _legacy_aggregation(spec: AggregationSpec | None) -> LegacyAggregationSpec | None:
+    """把公开聚合配置转换为旧版服务使用的枚举和模型。"""
+
     if spec is None:
         return None
     mapping = {
@@ -118,6 +124,8 @@ def _legacy_aggregation(spec: AggregationSpec | None) -> LegacyAggregationSpec |
 
 
 def _quality(value: str) -> SignalQuality:
+    """把旧版文本质量状态映射为公开信号质量枚举。"""
+
     if value == "GOOD":
         return SignalQuality.GOOD
     if value in {"MISSING", "MISSING_OR_INVALID"}:

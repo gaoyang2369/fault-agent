@@ -1,1 +1,1 @@
-"""Audit trail module boundary."""
+"""审计轨迹模块边界。"""

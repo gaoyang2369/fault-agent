@@ -1,4 +1,4 @@
-"""Unit tests for application-layer telemetry behavior."""
+"""应用层遥测行为的单元测试。"""
 
 from collections.abc import Sequence
 from datetime import UTC, datetime
@@ -18,14 +18,22 @@ from modules.telemetry.service import TelemetryQueryService
 
 
 class FixtureExecutor:
+    """为遥测服务单元测试返回预设源记录。"""
+
     def __init__(self, rows: list[Row]) -> None:
+        """保存测试查询应返回的源记录。"""
+
         self.rows = rows
 
     def fetch_all(self, sql: str, parameters: Sequence[object]) -> list[Row]:
+        """忽略固定 SQL 细节并返回预设记录。"""
+
         return self.rows
 
 
 def query(**overrides: object) -> TelemetryQuery:
+    """构造有效旧版查询，并允许测试覆盖指定字段。"""
+
     values: dict[str, object] = {
         "device_name": "D",
         "start": datetime(2026, 7, 16, tzinfo=UTC),
@@ -37,6 +45,8 @@ def query(**overrides: object) -> TelemetryQuery:
 
 
 def context() -> RequestContext:
+    """构造代表已认证工程师的旧版可信请求上下文。"""
+
     return RequestContext(
         request_id="request-1",
         trace_id="trace-1",
@@ -46,6 +56,8 @@ def context() -> RequestContext:
 
 
 def quality_settings() -> DataQualitySettings:
+    """构造仅用于测试的显式数据质量参数。"""
+
     return DataQualitySettings(
         nominal_interval_seconds=3,
         gap_warning_seconds=9,
@@ -55,6 +67,8 @@ def quality_settings() -> DataQualitySettings:
 
 
 def repository(rows: list[Row]) -> RealDataRepository:
+    """使用 UTC 源时区和预设记录构造只读仓储。"""
+
     return RealDataRepository(
         FixtureExecutor(rows),
         source_timezone="UTC",
@@ -63,6 +77,8 @@ def repository(rows: list[Row]) -> RealDataRepository:
 
 
 def test_query_contract_rejects_naive_time_and_unknown_fields() -> None:
+    """验证旧版查询拒绝无时区时间和未知字段。"""
+
     with pytest.raises(ValidationError):
         query(start=datetime(2026, 7, 16))
     with pytest.raises(ValidationError):
@@ -72,12 +88,18 @@ def test_query_contract_rejects_naive_time_and_unknown_fields() -> None:
 
 
 def test_policy_is_application_layer_and_can_rewrite_request() -> None:
+    """验证授权位于应用层，且策略可以确定性收紧查询。"""
+
     requested: list[TelemetryQuery] = []
 
     class GuestPolicy:
+        """把测试查询返回点数限制为一的访客策略。"""
+
         def authorize(
             self, command: TelemetryQuery, request_context: RequestContext
         ) -> TelemetryQuery:
+            """校验可信用户后复制并收紧查询命令。"""
+
             assert request_context.user_id == "authenticated-user"
             requested.append(command)
             return command.model_copy(
@@ -98,6 +120,8 @@ def test_policy_is_application_layer_and_can_rewrite_request() -> None:
 
 
 def test_service_limits_points_and_returns_invalid_value_warning() -> None:
+    """验证服务限制返回点数并报告非法数值告警。"""
+
     rows = [
         {"id": 1, "timestamp": "2026-07-16T00:00:00Z", "device_name": "D", "speed_actual": "bad"},
         {"id": 2, "timestamp": "2026-07-16T00:00:03Z", "device_name": "D", "speed_actual": 2},
@@ -117,6 +141,8 @@ def test_service_limits_points_and_returns_invalid_value_warning() -> None:
 
 
 def test_aggregation_rejects_reported_event_fields() -> None:
+    """验证数值聚合拒绝 fault_code 等设备上报事件字段。"""
+
     service = TelemetryQueryService(repository([]), quality_settings=quality_settings())
     request = query(
         signals=("fault_code",),
@@ -127,6 +153,8 @@ def test_aggregation_rejects_reported_event_fields() -> None:
 
 
 def test_data_quality_summary_uses_configured_thresholds_and_gaps() -> None:
+    """验证数据质量汇总仅使用显式参数判定完整率和间隔。"""
+
     rows = [
         {
             "id": 1,

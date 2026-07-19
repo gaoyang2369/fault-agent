@@ -1,4 +1,4 @@
-"""Read-only telemetry access and application query services."""
+"""只读遥测访问及应用查询服务模块。"""
 
 from modules.telemetry.models import (
     AggregationFunction,

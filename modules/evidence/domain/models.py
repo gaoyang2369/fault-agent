@@ -1,4 +1,4 @@
-"""Immutable evidence snapshots and evidence-bound claims."""
+"""不可变证据快照以及必须绑定证据的声明模型。"""
 
 from datetime import datetime
 from enum import StrEnum
@@ -11,10 +11,14 @@ from shared.time import TimeRange
 
 
 class StrictModel(BaseModel):
+    """拒绝未知字段且实例不可变的证据领域模型基类。"""
+
     model_config = ConfigDict(extra="forbid", frozen=True)
 
 
 class EvidenceType(StrEnum):
+    """证据内容的来源与结构类别。"""
+
     TELEMETRY_SLICE = "TELEMETRY_SLICE"
     DATA_QUALITY = "DATA_QUALITY"
     REPORTED_FAULT_CODE = "REPORTED_FAULT_CODE"
@@ -26,6 +30,8 @@ class EvidenceType(StrEnum):
 
 
 class TelemetrySlicePayload(StrictModel):
+    """描述一段遥测信号及其源记录范围的证据载荷。"""
+
     kind: Literal["TELEMETRY_SLICE"]
     signal_codes: tuple[str, ...] = Field(min_length=1)
     point_count: int = Field(ge=0)
@@ -33,6 +39,8 @@ class TelemetrySlicePayload(StrictModel):
 
 
 class DataQualityPayload(StrictModel):
+    """描述数据质量状态、完整率和告警代码的证据载荷。"""
+
     kind: Literal["DATA_QUALITY"]
     status: str
     completeness: float = Field(ge=0, le=1)
@@ -40,6 +48,8 @@ class DataQualityPayload(StrictModel):
 
 
 class ReportedCodePayload(StrictModel):
+    """保留设备上报故障/告警原始码、规范码和源记录的证据载荷。"""
+
     kind: Literal["REPORTED_FAULT_CODE", "REPORTED_ALARM_CODE"]
     raw_code: str = Field(min_length=1)
     normalized_code: str | None = None
@@ -47,6 +57,8 @@ class ReportedCodePayload(StrictModel):
 
 
 class RuleHitPayload(StrictModel):
+    """描述确定性规则命中及其规则版本和观测摘要的证据载荷。"""
+
     kind: Literal["RULE_HIT"]
     rule_id: str = Field(min_length=1)
     rule_version: str = Field(min_length=1)
@@ -54,6 +66,8 @@ class RuleHitPayload(StrictModel):
 
 
 class DocumentChunkPayload(StrictModel):
+    """描述知识文档版本、片段位置和摘录的证据载荷。"""
+
     kind: Literal["DOCUMENT_CHUNK"]
     document_id: str = Field(min_length=1)
     document_version: str = Field(min_length=1)
@@ -62,6 +76,8 @@ class DocumentChunkPayload(StrictModel):
 
 
 class ModelInferencePayload(StrictModel):
+    """描述模型版本、输出代码及输入证据集合的推理证据载荷。"""
+
     kind: Literal["MODEL_INFERENCE"]
     model_version: str = Field(min_length=1)
     output_code: str = Field(min_length=1)
@@ -69,6 +85,8 @@ class ModelInferencePayload(StrictModel):
 
 
 class UserObservationPayload(StrictModel):
+    """描述由已知人员记录的现场观测事实证据。"""
+
     kind: Literal["USER_OBSERVATION"]
     observation_code: str = Field(min_length=1)
     statement: str = Field(min_length=1)
@@ -88,6 +106,8 @@ EvidencePayload = Annotated[
 
 
 class Evidence(StrictModel):
+    """保存可校验内容哈希、来源引用和结构化载荷的不可变证据快照。"""
+
     evidence_id: EvidenceId
     evidence_type: EvidenceType
     asset_id: AssetId
@@ -100,6 +120,8 @@ class Evidence(StrictModel):
 
     @model_validator(mode="after")
     def validate_snapshot(self) -> "Evidence":
+        """校验证据时间带时区，且载荷判别类型与证据类型一致。"""
+
         if self.created_at.tzinfo is None or self.created_at.utcoffset() is None:
             raise ValueError("created_at must be timezone-aware")
         if self.payload.kind != self.evidence_type.value:
@@ -108,16 +130,22 @@ class Evidence(StrictModel):
 
 
 class ClaimType(StrEnum):
+    """声明的重要性类别。"""
+
     MATERIAL = "MATERIAL"
     INFORMATIONAL = "INFORMATIONAL"
 
 
 class EvidenceStatus(StrEnum):
+    """声明当前证据是否充分的状态。"""
+
     SUFFICIENT = "SUFFICIENT"
     INSUFFICIENT = "INSUFFICIENT"
 
 
 class ClaimGenerator(StrEnum):
+    """产生声明的主体或执行组件类别。"""
+
     SYSTEM = "SYSTEM"
     RULE_ENGINE = "RULE_ENGINE"
     MODEL = "MODEL"
@@ -125,6 +153,8 @@ class ClaimGenerator(StrEnum):
 
 
 class Claim(StrictModel):
+    """表达可追溯到支持/反驳证据的结构化声明。"""
+
     claim_id: ClaimId
     claim_type: ClaimType
     statement_code: str = Field(min_length=1)
@@ -136,6 +166,8 @@ class Claim(StrictModel):
 
     @model_validator(mode="after")
     def validate_evidence(self) -> "Claim":
+        """校验创建时间，并强制实质性声明引用证据或明确证据不足。"""
+
         if self.created_at.tzinfo is None or self.created_at.utcoffset() is None:
             raise ValueError("created_at must be timezone-aware")
         if (
